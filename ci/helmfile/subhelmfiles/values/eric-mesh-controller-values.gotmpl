@@ -1,0 +1,25 @@
+global:
+  registry:
+    url: {{ .Values.registry.url }}
+  pullSecret: {{ .Values.registry.pullSecret }}
+  accessLogFile: /dev/stdout
+  multiTenancy:
+      enabled: false
+  proxy:
+    autoinject: disabled
+    # logLevel: debug
+    holdApplicationUntilProxyStarts: true
+  meshConfig:
+    enablePrometheusMerge: false
+    autoMtls: true
+  autoScaling:
+    enabled: false
+  replicaCount: 1 
+  telemetry:
+    enabled: true
+    v2:
+      enabled: true
+pilot:
+  enableMetadataExchange: true
+  env:
+    ENABLE_TLS_ON_SIDECAR_INGRESS: true

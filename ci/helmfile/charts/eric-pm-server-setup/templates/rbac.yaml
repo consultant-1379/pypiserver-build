@@ -1,0 +1,153 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+# Source: eric-mxe-prometheus/templates/prometheus-rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: "lcm-pypiserver-prometheus-role"
+  labels:
+    app.kubernetes.io/component: "prometheus-ingress"
+    app.kubernetes.io/name: "eric-mxe-prometheus-role"
+    app.kubernetes.io/instance: "release-name"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/part-of: "mxe"
+    app.kubernetes.io/version: ""
+    helm.sh/chart: "eric-mxe-prometheus-0.3.0_1"
+  annotations:
+    ericsson.com/product-name: "MXE"
+    ericsson.com/product-number: "CXD 101 0232"
+    ericsson.com/product-revision: "0.3.0"
+rules:
+- apiGroups: [""]
+  resources:
+  - services
+  - endpoints
+  - pods
+  verbs: ["get", "list", "watch"]
+- apiGroups:
+  - extensions
+  resources:
+  - ingresses
+  verbs: ["get", "list", "watch"]
+---
+# Source: eric-mxe-prometheus/templates/prometheus-rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: "lcm-pypiserver-lm-prometheus-role-binding"
+  labels:
+    app.kubernetes.io/component: "prometheus-ingress"
+    app.kubernetes.io/name: "eric-mxe-prometheus-role-binding"
+    app.kubernetes.io/instance: "release-name"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/part-of: "mxe"
+    app.kubernetes.io/version: ""
+    helm.sh/chart: "eric-mxe-prometheus-0.3.0_1"
+  annotations:
+    ericsson.com/product-name: "MXE"
+    ericsson.com/product-number: "CXD 101 0232"
+    ericsson.com/product-revision: "0.3.0"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: "lcm-pypiserver-prometheus-role"
+subjects:
+- kind: ServiceAccount
+  name: eric-lcm-package-repository-py-sa-prometheus
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: "eric-lcm-package-repository-py-sa-prometheus"
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/component: "prometheus-ingress"
+    app.kubernetes.io/name: "eric-mxe-prometheus-service-account"
+    app.kubernetes.io/instance: "release-name"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/part-of: "mxe"
+    app.kubernetes.io/version: ""
+---
+# this is required to allow pm-server to scrape metrics from nodes for cadvisor
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    ericsson.com/product-name: MXE
+    ericsson.com/product-number: CXD 101 0232
+    ericsson.com/product-revision: 0.3.0
+  labels:
+    app.kubernetes.io/component: prometheus-ingress
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: eric-mxe-prometheus-clusterrole
+    app.kubernetes.io/part-of: mxe
+    app.kubernetes.io/version: ""
+    helm.sh/chart: eric-mxe-prometheus-0.3.0_1
+  name: lcm-pypiserver-prometheus-clusterrole
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  - nodes/proxy
+  - services
+  - endpoints
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - extensions
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - list
+  - watch
+- nonResourceURLs:
+  - /metrics
+  verbs:
+  - get
+---
+# this is required to allow pm-server to scrape metrics from nodes for cadvisor
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    ericsson.com/product-name: MXE
+    ericsson.com/product-number: CXD 101 0232
+    ericsson.com/product-revision: 0.3.0
+  labels:
+    app.kubernetes.io/component: prometheus-ingress
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: eric-mxe-prometheus-clusterrole-binding
+    app.kubernetes.io/part-of: mxe
+    app.kubernetes.io/version: ""
+    helm.sh/chart: eric-mxe-prometheus-0.3.0_1
+  name: lcm-pypiserver-lm-prometheus-clusterrole-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: lcm-pypiserver-prometheus-clusterrole
+subjects:
+- kind: ServiceAccount
+  name: eric-lcm-package-repository-py-sa-prometheus
+  namespace: {{ .Release.Namespace }}

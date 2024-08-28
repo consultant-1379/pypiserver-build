@@ -1,0 +1,1021 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "type": "object",
+  "properties": {
+    "affinity": {
+      "type": "object",
+      "properties": {
+        "podAntiAffinity": {
+          "type": "string"
+        }
+      }
+    },
+    "annotations": {
+      "type": "object"
+    },
+    "appArmorProfile": {
+      "type": "object",
+              "properties": {
+        "localhostProfile": {
+          "type": ["null","string"]
+        },
+        "type": {
+          "type": ["null","string"]
+        }
+      }
+    },
+    "auth": {
+      "type": "object",
+      "properties": {
+        "actions": {
+          "type": "string"
+        },
+        "credentials": {
+          "type": "object"
+        }
+      }
+    },
+    "autoScaling": {
+      "type": "object",
+      "properties": {
+        "cpuThreshold": {
+          "type": "integer"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "maxReplicas": {
+          "type": "integer"
+        },
+        "minReplicas": {
+          "type": "integer"
+        }
+      }
+    },
+    "bandwidth": {
+      "type": "object",
+      "properties": {
+        "pypiserver": {
+          "type": "object",
+          "properties": {
+            "maxEgressRate": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "extraLogLevel": {
+      "type": "array"
+    },
+    "fullnameOverride": {
+      "type": "string"
+    },
+    "imageCredentials": {
+      "type": "object",
+      "properties": {
+        "ericLcmPackageRepositoryPy": {
+          "type": "object",
+          "properties": {
+            "registry": {
+              "type": "object",
+              "properties": {
+                "imagePullPolicy": {
+                  "type": "null"
+                },
+                "repoPath": {
+                  "type": "null"
+                },
+                "url": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "repoPath": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "pullSecret": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pypiinit": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "image": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "tag": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "registry": {
+              "type": "object",
+              "properties": {
+                "imagePullPolicy": {
+                  "type": "null"
+                },
+                "repoPath": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "url": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "repoPath": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "registry": {
+          "type": "object",
+          "properties": {
+            "imagePullPolicy": {
+              "type": "null"
+            },
+            "url": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "repoPath": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "ingress": {
+      "type": "object",
+      "properties": {
+        "annotations": {
+          "type": "object"
+        },
+        "certificates": {
+          "type": "object",
+          "properties": {
+            "asymmetricKeyCertificateName": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "trustedCertificateListName": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "controller": {
+          "type": "object",
+          "properties": {
+            "namespace": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "serviceName": {
+              "type": "string"
+            }
+          }
+        },
+        "createRoutes": {
+          "type": "boolean"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "hostname": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ingressClass": {
+          "type": "string"
+        },
+        "serviceReference": {
+          "type": "string"
+        },
+        "tls": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "secretName": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "verifyClientCertificate": {
+              "type": "string"
+            }
+          }
+        },
+        "useHTTPProxy": {
+          "type": "boolean"
+        }
+      }
+    },
+    "labels": {
+      "type": "object"
+    },
+    "logShipper": {
+      "type": "object",
+      "properties": {
+        "input": {
+          "type": "object",
+          "properties": {
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "multilines": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "paths": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "logLevel": {
+          "type": "string"
+        },
+        "output": {
+          "type": "object",
+          "properties": {
+            "logTransformer": {
+              "type": "object",
+              "properties": {
+                "host": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "runAndExit": {
+          "type": "boolean"
+        },
+        "stdoutRedirect": {
+          "type": "object",
+          "properties": {
+            "rotate": {
+              "type": "integer"
+            },
+            "size": {
+              "type": "integer"
+            }
+          }
+        },
+        "storage": {
+          "type": "object",
+          "properties": {
+            "medium": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "size": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "nameOverride": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "networkPolicy": {
+      "type": "object",
+      "properties": {
+        "egress": {
+          "type": "null"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "services": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "labels": {
+                "type": "object",
+                "properties": {
+                  "app.kubernetes.io/name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "nodeSelector": {
+      "type": "object",
+      "properties": {
+        "brAgent": {
+          "type": "object"
+        },
+        "pypiserver": {
+          "type": "object"
+        }
+      }
+    },
+    "persistence": {
+      "type": "object",
+      "properties": {
+        "persistentVolumeClaim": {
+          "type": "object",
+          "properties": {
+            "accessModes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "annotations": {
+              "type": "object"
+            },
+            "size": {
+              "type": "string"
+            },
+            "storageClassName": {
+              "type": "null"
+            }
+          }
+        }
+      }
+    },
+    "podDisruptionBudget": {
+      "type": "object",
+      "properties": {
+        "minAvailable": {
+          "type": "string"
+        }
+      }
+    },
+    "podPriority": {
+      "type": "object",
+      "properties": {
+        "brAgent": {
+          "type": "object",
+          "properties": {
+            "priorityClassName": {
+              "type": "string"
+            }
+          }
+        },
+        "ericLcmPackageRepositoryPy": {
+          "type": "object",
+          "properties": {
+            "priorityClassName": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "podSecurityContext": {
+      "type": "object",
+      "properties": {
+        "supplementalGroups": {
+          "type": [
+            "array",
+            "null"
+          ]
+        }
+      }
+    },
+    "probes": {
+      "type": "object",
+      "properties": {
+        "brAgent": {
+          "type": "object",
+          "properties": {
+            "livenessProbe": {
+              "type": "object",
+              "properties": {
+                "failureThreshold": {
+                  "type": "integer"
+                },
+                "initialDelaySeconds": {
+                  "type": "integer"
+                },
+                "periodSeconds": {
+                  "type": "integer"
+                },
+                "successThreshold": {
+                  "type": "integer"
+                },
+                "timeoutSeconds": {
+                  "type": "integer"
+                }
+              }
+            },
+            "readinessProbe": {
+              "type": "object",
+              "properties": {
+                "failureThreshold": {
+                  "type": "integer"
+                },
+                "initialDelaySeconds": {
+                  "type": "integer"
+                },
+                "periodSeconds": {
+                  "type": "integer"
+                },
+                "successThreshold": {
+                  "type": "integer"
+                },
+                "timeoutSeconds": {
+                  "type": "integer"
+                }
+              }
+            },
+            "startupProbe": {
+              "type": "object",
+              "properties": {
+                "failureThreshold": {
+                  "type": "integer"
+                },
+                "initialDelaySeconds": {
+                  "type": "integer"
+                },
+                "periodSeconds": {
+                  "type": "integer"
+                },
+                "successThreshold": {
+                  "type": "integer"
+                },
+                "timeoutSeconds": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "ericLcmPackageRepositoryPy": {
+          "type": "object",
+          "properties": {
+            "livenessProbe": {
+              "type": "object",
+              "properties": {
+                "failureThreshold": {
+                  "type": "integer"
+                },
+                "initialDelaySeconds": {
+                  "type": "integer"
+                },
+                "periodSeconds": {
+                  "type": "integer"
+                },
+                "successThreshold": {
+                  "type": "integer"
+                },
+                "timeoutSeconds": {
+                  "type": "integer"
+                }
+              }
+            },
+            "readinessProbe": {
+              "type": "object",
+              "properties": {
+                "failureThreshold": {
+                  "type": "integer"
+                },
+                "initialDelaySeconds": {
+                  "type": "integer"
+                },
+                "periodSeconds": {
+                  "type": "integer"
+                },
+                "successThreshold": {
+                  "type": "integer"
+                },
+                "timeoutSeconds": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "pypiserver": {
+      "type": "object",
+      "properties": {
+        "extraArgs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "replicaCount": {
+      "type": "integer"
+    },
+    "resources": {
+      "type": "object",
+      "properties": {
+        "brAgent": {
+          "type": "object",
+          "properties": {
+            "jvm": {
+              "type": "object",
+              "properties": {
+                "initialMemoryAllocationPercentage": {
+                  "type": "integer"
+                },
+                "largeMemoryAllocationMaxPercentage": {
+                  "type": "integer"
+                },
+                "smallMemoryAllocationMaxPercentage": {
+                  "type": "integer"
+                }
+              }
+            },
+            "limits": {
+              "type": "object",
+              "properties": {
+                "cpu": {
+                  "type": "string"
+                },
+                "ephemeral-storage": {
+                  "type": "string"
+                },
+                "memory": {
+                  "type": "string"
+                }
+              }
+            },
+            "requests": {
+              "type": "object",
+              "properties": {
+                "cpu": {
+                  "type": "string"
+                },
+                "ephemeral-storage": {
+                  "type": "string"
+                },
+                "memory": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "ericLcmPackageRepositoryPy": {
+          "type": "object",
+          "properties": {
+            "limits": {
+              "type": "object",
+              "properties": {
+                "cpu": {
+                  "type": "string"
+                },
+                "ephemeral-storage": {
+                  "type": "string"
+                },
+                "memory": {
+                  "type": "string"
+                }
+              }
+            },
+            "requests": {
+              "type": "object",
+              "properties": {
+                "cpu": {
+                  "type": "string"
+                },
+                "ephemeral-storage": {
+                  "type": "string"
+                },
+                "memory": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "init-load-packages": {
+          "type": "object",
+          "properties": {
+            "limits": {
+              "type": "object",
+              "properties": {
+                "cpu": {
+                  "type": "string"
+                },
+                "ephemeral-storage": {
+                  "type": "string"
+                },
+                "memory": {
+                  "type": "string"
+                }
+              }
+            },
+            "requests": {
+              "type": "object",
+              "properties": {
+                "cpu": {
+                  "type": "string"
+                },
+                "memory": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "logshipper": {
+          "type": "object",
+          "properties": {
+            "limits": {
+              "type": "object",
+              "properties": {
+                "cpu": {
+                  "type": "string"
+                },
+                "ephemeral-storage": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "memory": {
+                  "type": "string"
+                }
+              }
+            },
+            "requests": {
+              "type": "object",
+              "properties": {
+                "cpu": {
+                  "type": "string"
+                },
+                "ephemeral-storage": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "memory": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "seccompProfile": {
+      "type": "object",
+              "properties": {
+        "localhostProfile": {
+          "type": ["null","string"]
+        },
+        "type": {
+          "type": ["null","string"]
+        }
+      }
+    },
+    "securityPolicy": {
+      "type": "object",
+      "properties": {
+        "bragent": {
+          "type": "object",
+          "properties": {
+            "rolename": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "service": {
+      "type": "object",
+      "properties": {
+        "endpoints": {
+          "type": "object",
+          "properties": {
+            "ericLcmPackageRepositoryPy": {
+              "type": "object",
+              "properties": {
+                "tls": {
+                  "type": "object",
+                  "properties": {
+                    "verifyClientCertificate": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "metrics": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        "port": {
+          "type": "integer"
+        }
+      }
+    },
+    "serviceMesh": {
+      "type": "object",
+      "properties": {
+        "egress": {
+          "type": "object",
+          "properties": {
+            "ca": {
+              "type": "object",
+              "properties": {
+                "caCertsPath": {
+                  "type": ["null", "string"]
+                },
+                "genSecretName": {
+                  "type": ["null", "string"]
+                }
+              }
+            },
+            "enabled": {
+              "type": "boolean"
+            },
+            "ericlcmpackagerepositorypy": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "gateway": {
+          "type": "object",
+          "properties": {
+            "port": {
+              "type": "integer"
+            },
+            "serviceName": {
+              "type": "string"
+            },
+            "tls": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                },
+                "rootCaSecret": {
+                  "type": ["null", "string"]
+                },
+                "subjectName": {
+                  "type": ["null", "string"]
+                }
+              }
+            }
+          }
+        },
+        "ingress": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "gwName": {
+              "type": "string"
+            },
+            "host": {
+              "type": "string"
+            },
+            "matchPrefix": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "settingsVS": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "overallTimeout": {
+              "type": "string"
+            },
+            "retries": {
+              "type": "object",
+              "properties": {
+                "attempts": {
+                  "type": "integer"
+                },
+                "perTryTimeout": {
+                  "type": "string"
+                },
+                "retryOn": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "tls": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "mode": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "terminationGracePeriodSeconds": {
+      "type": "integer"
+    },
+    "tolerations": {
+      "type": "object",
+      "properties": {
+        "bragent": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "effect": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              },
+              "operator": {
+                "type": "string"
+              },
+              "tolerationSeconds": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        "pypiserver": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "effect": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              },
+              "operator": {
+                "type": "string"
+              },
+              "tolerationSeconds": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
+    "topologySpreadConstraints": {
+      "type": "object",
+      "properties": {
+        "pypiserver": {
+          "type": "array"
+        }
+      }
+    },
+    "updateStrategy": {
+      "type": "object",
+      "properties": {
+        "brAgent": {
+          "type": "object",
+          "properties": {
+            "rollingUpdate": {
+              "type": "object",
+              "properties": {
+                "maxSurge": {
+                  "type": "string"
+                },
+                "maxUnavailable": {
+                  "type": "string"
+                }
+              }
+            },
+            "type": {
+              "type": "string"
+            }
+          }
+        },
+        "rollingUpdate": {
+          "type": "object",
+          "properties": {
+            "maxSurge": {
+              "type": "string"
+            },
+            "maxUnavailable": {
+              "type": "string"
+            }
+          }
+        },
+        "type": {
+          "type": "string"
+        }
+      }
+    },
+    "serviceAccount": {
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

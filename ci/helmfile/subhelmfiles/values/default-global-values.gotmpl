@@ -1,0 +1,11 @@
+global:
+  serviceMesh:
+    enabled: {{ .Values.serviceMesh.enabled }}
+  pullSecret: {{ .Values.registry.pullSecret }}
+  registry:
+    url: {{ .Values.registry.url }}
+  persistence:
+    persistentVolumeClaim:
+    storageClassName: {{ .Values.storageClassName }}
+  featureGates:
+    caBootstrap_v2: true

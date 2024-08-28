@@ -1,0 +1,11 @@
+global:
+  registry:
+    url: {{ .Values.registry.url }}
+  pullSecret: {{ .Values.registry.pullSecret }}
+  featureGates:
+    caBootstrap_v2: true
+affinity:
+  podAntiAffinity: soft
+persistence:
+    persistentVolumeClaim:
+      storageClassName: {{ .Values.storageClassName }}

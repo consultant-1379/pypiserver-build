@@ -1,0 +1,21 @@
+
+bcrypt==4.0.1
+# We use gunicorn as the default server in the docker container, with gevent
+# workers
+gevent==23.9.1
+greenlet==3.0.0
+    # via gevent
+gunicorn==21.2.0
+packaging==23.2
+    # via gunicorn
+passlib==1.7.4
+pypiserver==2.1.1
+# If a user overrides args but does not override the server arg, we fall back to
+# whatever bottle chooses as a default. Since the wsgiref server is not
+# production-ready, install waitress as a fallback for these cases.
+waitress==2.1.2
+watchdog==3.0.0
+zope-event==5.0
+    # via gevent
+zope-interface==6.1
+    # via gevent

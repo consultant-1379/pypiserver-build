@@ -1,0 +1,84 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+bases:
+  - ../common/repositories.yaml
+  - ../common/defaults.yaml
+--- 
+
+releases:
+  - name: eric-sec-sip-tls-crd
+    namespace: {{ requiredEnv "NAMESPACE" }}
+    chart: adp/eric-sec-sip-tls-crd
+    hooks:
+    - events: ['postuninstall']
+      showlogs: true
+      command: "/bin/bash"
+      args: 
+       - "-c"
+       - |
+          set -x;
+          echo "Cleaning up resources left behind by eric-sec-sip-tls-crd";
+          SIP_TLS_CRD_RELEASE_NAME='{{`{{.Release.Name}}`}}';
+          NAMESPACE='{{`{{ requiredEnv "NAMESPACE" }}`}}';
+          kubectl delete deployment,statefulset,jobs,pods,svc,ingress,configmap,secret,sa,role,rolebinding,clusterrole,clusterrolebinding,pdb,hpa -n ${NAMESPACE} -l app.kubernetes.io/instance=${SIP_TLS_CRD_RELEASE_NAME};
+          kubectl delete CustomResourceDefinition -l app.kubernetes.io/name=eric-sec-sip-tls-crd;
+  - name: eric-data-distributed-coordinator-ed
+    namespace: {{ requiredEnv "NAMESPACE" }}
+    chart: adp/eric-data-distributed-coordinator-ed
+    values:
+      - "values/eric-data-distributed-coordinator-ed-values.gotmpl"
+    needs:
+      - eric-sec-sip-tls-crd
+  - name: eric-sec-key-management
+    namespace: {{ requiredEnv "NAMESPACE" }} 
+    chart: adp/eric-sec-key-management
+    values:
+      - "values/default-global-values.gotmpl"
+    needs:
+      - eric-sec-sip-tls-crd
+    hooks:
+    - events: ['postuninstall']
+      showlogs: true
+      command: "/bin/bash"
+      args: 
+       - "-c"
+       - |
+          set -x;
+          echo "Cleaning up resources left behind by eric-sec-key-management";
+          NAMESPACE='{{`{{ requiredEnv "NAMESPACE" }}`}}';
+          kubectl delete secret --namespace ${NAMESPACE} eric-data-object-storage-mn-kms-set --ignore-not-found=true;      
+  - name: eric-sec-sip-tls
+    namespace: {{ requiredEnv "NAMESPACE" }}  
+    chart: adp/eric-sec-sip-tls
+    values:
+      - "values/default-global-values.gotmpl"
+    needs:
+      - eric-sec-sip-tls-crd
+    hooks:
+    - events: ['postuninstall']
+      showlogs: true
+      command: "/bin/bash"
+      args: 
+       - "-c"
+       - |
+          set -x;
+          echo "Cleaning up resources left behind by eric-sec-sip-tls";
+          SIP_TLS_RELEASE_NAME='{{`{{.Release.Name}}`}}';
+          NAMESPACE='{{`{{ requiredEnv "NAMESPACE" }}`}}';
+          kubectl delete deployment,statefulset,jobs,pods,svc,ingress,configmap,secret,sa,role,rolebinding,clusterrole,clusterrolebinding,pdb,hpa -n ${NAMESPACE} -l com.ericsson.sec.tls/created-by=${SIP_TLS_RELEASE_NAME};
+          kubectl delete configmap -n ${NAMESPACE} eric-sec-sip-tls-ha eric-sec-sip-tls-supervisor-ha --ignore-not-found=true;
+ 

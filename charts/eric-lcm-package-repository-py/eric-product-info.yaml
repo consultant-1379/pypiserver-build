@@ -1,0 +1,33 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+productName: "eric-lcm-package-repository-py Helm Chart"
+productNumber: "CXD 101 723"
+images:
+  ericLcmPackageRepositoryPy:
+    productName: "eric-lcm-package-repository-py Image"
+    productNumber: "CXU 101 2163"
+    registry: "armdocker.rnd.ericsson.se"
+    repoPath: REPO_PATH
+    name: MAIN_IMAGE_NAME
+    tag: VERSION
+  eric-aiml-bragent:
+    productName: "Eric AI/ML BRAgent"
+    productNumber: "CXU1111111"
+    registry: "armdocker.rnd.ericsson.se"
+    repoPath: REPO_PATH
+    name: eric-aiml-bragent
+    tag: 1.0.0-18

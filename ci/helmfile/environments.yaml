@@ -1,0 +1,31 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+environments:
+  default:
+    values:
+      - ./environments/defaults/config.yaml
+  
+  vcluster1_kroto012: &kroto012
+    values:
+      - ./environments/defaults/config.yaml
+      - ./environments/kroto012.yaml
+
+  vcluster2_kroto012 : *kroto012
+  vcluster3_kroto012 : *kroto012
+  vcluster4_kroto012 : *kroto012
+  vcluster5_kroto012 : *kroto012
+  vcluster6_kroto012 : *kroto012

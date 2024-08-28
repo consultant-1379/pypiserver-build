@@ -1,0 +1,55 @@
+global:
+  security:
+    tls:
+      enabled: TLS_ENABLED 
+      trustedInternalRootCa:
+        secret: eric-sec-sip-tls-trusted-root-cert
+  serviceMesh:
+    enabled: SERVICEMESH_ENABLED
+  adpBR:
+    broServiceName: eric-ctrl-bro
+    broGrpcServicePort: 3000
+    brLabelKey: adpbrlabelkey
+  securityPolicy:
+    rolekind: Role    
+imageCredentials:
+    pullSecret: IMAGE_PULL_SECRET
+    pypiinit:
+        enabled: true
+        registry:
+            repoPath: proj-mxe-ci-internal
+        image:
+            name: python-packages-loader 
+            tag: 0.3-6.0.0-18-01
+ingress:
+  enabled: true
+  useHTTPProxy: true
+  ingressClass: eric-tm-ingress-controller-cr
+  hostname: INGRESS_HOST_NAME
+  tls:
+    enabled: true
+    secretName: lcm-package-repository-py-tls
+
+auth:
+  actions: update
+  credentials: 
+    admin: $2y$05$c3FGxqVCgKr4mIU28sR25ufyNdwOR1fdNeM.m/BGL.QBLIv7CTW3G
+
+pypiserver: 
+  extraArgs: 
+      - --verbose
+      - --verbose 
+      - --verbose
+      - --disable-fallback
+      - --log-file=/log/pypiserver.log      
+
+brAgent:
+  enabled: BRO_ENABLED
+  brLabelValue: PythonPackageRepositoryBRAgent
+  backupTypeList:
+    - "DEFAULT"
+    - "PythonPackageRepository"
+  # BRA rest api port
+  restPort: 8081
+  logLevel: info
+

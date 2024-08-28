@@ -1,0 +1,25 @@
+{
+    "metadata": {
+        "serviceHelmChartName": "eric-lcm-package-repository-py",
+        "usedSchemaVersion": "1.0.0",
+        "fileVersion": "1.0.0",
+        "dateEdited": "2023-11-22"
+    },
+    "interfaceImpls": [
+        {
+            "id": "IMPL.AIML.PYPI.IF.HELM_VALUES_SCHEMA",
+            "provides": {
+                "dataIf": [
+                    {
+                        "id": "IF.AIML.PYPI.HELM_VALUES_SCHEMA.V1",
+                        "description": "Python Package Repository, Helm Values Schema",
+                        "specUri": "values.schema.json",
+                        "specVer": "1.0.0",
+                        "type": "HelmValues",
+                        "scope": "clusterExternal"
+                    }
+                ]
+            }
+        }
+    ]
+}

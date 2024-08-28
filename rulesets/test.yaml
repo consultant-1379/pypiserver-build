@@ -1,0 +1,477 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+modelVersion: 2.0
+
+description: "AI/ML LibraryManager Build Tasks"
+
+# See image catalog: https://confluence.lmera.ericsson.se/display/ACD/ADP+CICD+Docker+Image+Catalog
+docker-images:
+    - adp-release-auto: armdocker.rnd.ericsson.se/proj-adp-cicd-drop/bob-adp-release-auto:${env.RELEASE_AUTO_TAG}
+    - adp-helm-kubectl: armdocker.rnd.ericsson.se/proj-adp-cicd-drop/bob-py3kubehelmbuilder:${env.HELM_KUBECTL_TAG}
+    - robot-framework: armdocker.rnd.ericsson.se/proj-mlops-ci-internal/tools/robot-test-runner:latest
+    - ci-toolkit: armdocker.rnd.ericsson.se/proj-mlops-ci-internal/tools/ci-toolkit:${env.CI_TOOLKIT_TAG}
+
+import:
+    common: common-properties.yaml
+    dependencies: dependencies.yaml
+
+properties:
+    - image-secret: armdocker-creds
+    - helm-params-set:
+        --set imageCredentials.pullSecret=${image-secret}
+        --set ingress.enabled=true 
+        --set ingress.useHTTPProxy=true 
+        --set ingress.ingressClass=eric-tm-ingress-controller-cr
+        --set ingress.tls.enabled=true 
+        --set ingress.tls.secretName=lcm-pypiserver-tls
+        --set global.security.tls.enabled=${env.TLS_ENABLED}
+        --set global.serviceMesh.enabled=${env.SERVICEMESH_ENABLED}
+        --set imageCredentials.pypiinit.enabled=true
+        --set imageCredentials.pypiinit.registry.repoPath=proj-mxe-ci-internal
+        --set imageCredentials.pypiinit.image.name=python-packages-loader 
+        --set imageCredentials.pypiinit.image.tag=0.1-6.0.0-18-01
+    - helm-params: |
+        IMAGE_PULL_SECRET=${image-secret}
+        INGRESS_HOST_NAME=${env.INGRESS_HOST_NAME}
+        INGRESS_HOST_TLS_SECRET_MANIFEST=${env.INGRESS_HOST_TLS_SECRET_MANIFEST}
+        TLS_ENABLED=${env.TLS_ENABLED}
+        SERVICEMESH_ENABLED=${env.SERVICEMESH_ENABLED}
+        BRO_ENABLED=${env.BRO_ENABLED}
+    - docker-flags-helm3: "--env XDG_DATA_HOME=${env.PWD}/.bob/helm/data --env XDG_CACHE_HOME=${env.PWD}/.bob/helm/cache --env XDG_CONFIG_HOME=${env.PWD}/.bob/helm/config --env HELM_VERSION=${env.HELM_VERSION}"
+    - kubectl-cache-dir: "${env.PWD}/.bob/kubectl/cache"    
+    - helm-values-file: "${common.helm-values-file}"
+    - helm-chart-repopath: ${common.helm-chart-repo-server-path}-${env.BUILD_PHASE}-helm
+
+env:
+    - DOCKER_NETWORK (default=--network host)
+    - HOME
+    - PWD
+
+    # Default docker image tags
+    - RELEASE_AUTO_TAG (default=latest)
+    - HELM_KUBECTL_TAG (default=latest)
+    - CI_TOOLKIT_TAG (default=latest)
+
+    # Credentials
+    - DOCKER_CONFIG_DIR (default=${env.HOME}/.docker)
+    - DOCKER_CONFIG (default=$DOCKER_CONFIG_DIR/config.json)
+    - CREDENTIALS_SELI_ARTIFACTORY_USR
+    - CREDENTIALS_SELI_ARTIFACTORY_PSW
+    - SELI_ARTIFACTORY_REPO_USER (default=${env.CREDENTIALS_SELI_ARTIFACTORY_USR})
+    - SELI_ARTIFACTORY_REPO_PASS (default=${env.CREDENTIALS_SELI_ARTIFACTORY_PSW})
+
+    # Kubernetes
+    - ENABLE_HELM_V3 (default=true)
+    - HELM_VERSION (default=3.11.3)
+    - KUBECTL_VERSION (default=1.25.3)
+    - K8S_NAMESPACE (default=lcm-pypiserver-ci)
+    - KUBECONFIG (default=${env.HOME}/.kube/config)
+    - HELM_INSTALL_TIMEOUT (default=5m0s)
+    - HELM_RELEASE (default=${common.helm-chart-name}-release)
+    - HELM_TEST_TIMEOUT (default=5m0s)
+    - COLLECT_LOGS_SCRIPT_LOCATION (default="https://arm.sero.gic.ericsson.se/artifactory/proj-ADP_GS_Support_FTP-generic-local/collect_ADP_logs")
+    - COLLECT_LOGS_SCRIPT_FILE_NAME (default="collect_ADP_logs.sh")
+    - COLLECT_LOGS_SINCE_RELATIVE_TIME (default="2h")
+    - COLLECT_LOGS_DIR (default=./k8s-logs)
+    - BUILD_DIR (default=./build)
+    - KAAS_INFO_FILE (default=${env.BUILD_DIR}/kaas-info.log)
+
+    ##Service params
+    #MTLS
+    - TLS_ENABLED (default=true)
+    - SERVICEMESH_ENABLED (default=true)
+    - INGRESS_HOST_NAME (default=eric-lcm-package-repo-py.vcluster3.kroto005.rnd.gic.ericsson.se)
+    - INGRESS_HOST_TLS_SECRET_MANIFEST (default=notset)
+
+    # BRO
+    - BRO_ENABLED (default=false)
+
+    - LCM_PYPISERVER_USERNAME (default="admin")
+    - LCM_PYPISERVER_PASSWORD (default="admin")
+    
+    - ROBOT_REPORTS_DIR (default=${env.PWD}/test-reports)
+    - ROBOT_TESTS_DIR (default=${env.PWD}/test)
+    - TEST_DATA_DIR (default=${env.PWD}/test/testdata)
+
+    ## For logshipper integration
+    - LOGSHIPPER_CHART_VERSION (default=notset)
+    - PYTHON_PKG_REPO_CHART_VERSION (default=${var.version})
+    - PYTHON_PKG_REPO_CHART_REPO (default=${var.helm-chart-repo-internal})
+
+    ## Version of ml-pipeline to be installed . When no version is given latest will be installed.
+    - VERSION(default=)
+
+var:
+    - commithash
+    - save-namespace
+    - kaas-version
+    - kaas-current-context
+    - helm-chart-repopath
+    - robot-include-tag
+    - robot-exclude-tag
+    - robot-test-suite-to-run
+    - robot-test-report-dir
+    - robot-executable
+    - version
+    - helm-chart-repo-internal
+
+rules:
+    clean:
+        - task: rm
+          cmd:
+              - rm -rf k8s-logs/
+              - rm -f helm-install-dry-run.log
+
+    namespace-find-and-clean:
+        - task: find-and-clean
+          docker-image: adp-helm-kubectl
+          docker-flags: &docker_flags_kube_config_test 
+              - ${env.DOCKER_NETWORK}
+              - "--env HOME=${env.HOME}"
+              - "--env K8S_NAMESPACE=${env.K8S_NAMESPACE}"
+              - "--env KUBECONFIG=${env.KUBECONFIG}"
+              - "--env ENABLE_HELM_V3"
+              - "--env HELM_VERSION"
+              - "--env KUBECTL_VERSION"
+              - "--env SELI_ARTIFACTORY_REPO_USER=${env.SELI_ARTIFACTORY_REPO_USER}"
+              - "--env SELI_ARTIFACTORY_REPO_PASS=${env.SELI_ARTIFACTORY_REPO_PASS}"
+              - "--env COLLECT_LOGS_SCRIPT_LOCATION"
+              - "--volume ${env.PWD}:${env.PWD}"
+              - "--volume ${env.HOME}:${env.HOME}"
+              - "--volume ${env.KUBECONFIG}:${env.KUBECONFIG}"
+              - "--volume ${env.DOCKER_CONFIG_DIR}:${env.DOCKER_CONFIG_DIR}"
+          cmd:
+              - kubectl get ns ${env.K8S_NAMESPACE} | awk '{if($1=="${env.K8S_NAMESPACE}") print $1};' > .bob/var.save-namespace || true
+              - kubectl delete namespace ${var.save-namespace} || true
+
+    helm-install-dry-run:
+        - task: install-dry-run
+          docker-image: adp-helm-kubectl
+          docker-flags: *docker_flags_kube_config_test
+          cmd: helm install ${common.helm-chart-localpath}
+              --namespace $K8S_NAMESPACE
+              --dry-run
+              --debug
+              --generate-name > helm-install-dry-run.log
+    
+    helm-create-namespace:
+        - task: create-k8s-namespace
+          docker-image: adp-helm-kubectl
+          docker-flags: *docker_flags_kube_config_test
+          cmd: kubectl create ns $K8S_NAMESPACE || true
+
+    helm-prepare-repo-drop:
+        - task: prepare-repo
+          cmd:
+              - echo ${common.helm-chart-drop-repopath} > .bob/var.helm-chart-repopath
+    helm-prepare-repo-released:
+        - task: prepare-repo
+          cmd:
+              - echo ${common.helm-chart-released-repopath} > .bob/var.helm-chart-repopath
+
+    helm-install-or-upgrade-from-local:
+        - task: install-or-upgrade-from-local
+          docker-image: adp-helm-kubectl
+          docker-flags: *docker_flags_kube_config_test
+          cmd: helm upgrade
+              --install ${env.HELM_RELEASE} ${common.helm-chart-localpath}
+              --namespace ${env.K8S_NAMESPACE}
+              --values ${helm-values-file}
+              --timeout ${env.HELM_INSTALL_TIMEOUT}
+              --debug
+              --wait
+
+    helm-install-or-upgrade-from-arm:
+        - task: install-or-upgrade-from-arm
+          docker-image: adp-helm-kubectl
+          docker-flags: *docker_flags_kube_config_test
+          cmd: helm upgrade
+              ${env.VERSION}          
+              --install ${env.HELM_RELEASE} ${common.helm-chart-name}
+              --namespace ${env.K8S_NAMESPACE}
+              --values ${helm-values-file}
+              --debug
+              --timeout ${env.HELM_INSTALL_TIMEOUT}
+              --wait
+              --devel
+              --repo ${var.helm-chart-repopath} 
+              --username ${env.SELI_ARTIFACTORY_REPO_USER} 
+              --password ${env.SELI_ARTIFACTORY_REPO_PASS}
+
+    helm-rollback:
+        - task: rollback
+          docker-image: adp-helm-kubectl
+          docker-flags: *docker_flags_kube_config_test
+          cmd: 
+            - helm rollback ${env.HELM_RELEASE} 1
+              --namespace ${env.K8S_NAMESPACE}
+              --timeout ${env.HELM_INSTALL_TIMEOUT}
+              --wait
+            - helm list --namespace ${env.K8S_NAMESPACE}
+
+    install-integration-chart:
+      - task: update-int-chart-dependencies
+        docker-image: ci-toolkit 
+        docker-envs:
+        - LOGSHIPPER_CHART_VERSION
+        - PYTHON_PKG_REPO_CHART_VERSION
+        - PYTHON_PKG_REPO_CHART_REPO
+        - K8S_NAMESPACE
+        - SELI_ARTIFACTORY_REPO_USER
+        - SELI_ARTIFACTORY_REPO_PASS
+        - INGRESS_HOST_NAME
+        - KUBECONFIG
+        - HELM_RELEASE
+        docker-flags:
+          - "${docker-flags-helm3}"
+          - "--volume ${env.PWD}:${env.PWD}"
+          - "--volume ${env.KUBECONFIG}:${env.KUBECONFIG}"
+          - "--volume ${kubectl-cache-dir}:/.kube/cache"
+        cmd: bash ci/scripts/install-logshipper-int-chart.sh "${helm-values-file}"           
+
+
+    helm-healthcheck:
+        - task: healthcheck
+          docker-image: adp-helm-kubectl
+          docker-flags: *docker_flags_kube_config_test
+          cmd: ./ci/scripts/healthcheck.sh
+
+    helm-test:
+        - task: test
+          docker-image: adp-helm-kubectl
+          docker-flags: *docker_flags_kube_config_test
+          cmd: helm test ${env.HELM_RELEASE}
+              --namespace ${env.K8S_NAMESPACE}
+              --timeout ${env.HELM_TEST_TIMEOUT}
+    
+    robot-test-runner:
+        - task: preparations
+          docker-image: adp-helm-kubectl
+          cmd:
+            - ${env.PWD}/scripts/robot/generate-pypi-repository-details.sh
+                "${env.PWD}/test/variables/pypi_repository_details.py"
+                ${env.INGRESS_HOST_NAME} ${env.LCM_PYPISERVER_USERNAME} ${env.LCM_PYPISERVER_PASSWORD}
+        - task: execute
+          docker-image: robot-framework
+          docker-flags:
+            - "--env HOME=/tmp"
+            - "--env ROBOT_REPORTS_DIR=${env.ROBOT_REPORTS_DIR}"
+            - "--env ROBOT_TESTS_DIR=${env.ROBOT_TESTS_DIR}"
+            - "--env TEST_DATA_DIR=${env.TEST_DATA_DIR}"
+            - "--env PYTHONPATH=${env.ROBOT_TESTS_DIR}"
+          cmd: bash -c '''set -ex;
+            echo -n "Running test cases \n";
+            ${env.PWD}/scripts/robot/run-test-suite.sh "${var.robot-test-report-dir}" "${var.robot-test-suite-to-run}" "${var.robot-include-tag}" "${var.robot-exclude-tag}" "${var.robot-executable}";'''
+
+    robot-functional-completeness:
+        - task: set-vars
+          cmd:
+            - echo "pqm_characteristics/functional_completeness" > .bob/var.robot-test-suite-to-run
+            - echo "test-dev" > .bob/var.robot-include-tag
+            - echo "none" > .bob/var.robot-exclude-tag
+            - echo "functional-completeness" > .bob/var.robot-test-report-dir
+            - echo "robot" > .bob/var.robot-executable
+        - rule: robot-test-runner
+  
+    robot-pypiserver-ericsson-mlops:
+        - task: set-vars
+          cmd:
+            - echo "pqm_characteristics/functional_completeness" > .bob/var.robot-test-suite-to-run
+            - echo "ericsson-mlops" > .bob/var.robot-include-tag
+            - echo "none" > .bob/var.robot-exclude-tag
+            - echo "pypiserver-test-report" > .bob/var.robot-test-report-dir
+    
+    robot-functional-completeness-weekly:
+        - task: set-vars
+          cmd:
+            - echo "pqm_characteristics/functional_completeness/pypi.robot" > .bob/var.robot-test-suite-to-run
+            - echo "test-weekly" > .bob/var.robot-include-tag
+            - echo "none" > .bob/var.robot-exclude-tag
+            - echo "functional-completeness" > .bob/var.robot-test-report-dir
+            - echo "robot" > .bob/var.robot-executable
+        - rule: robot-test-runner
+
+    robot-test-local:
+        # This rule is to test locally before in pipeline
+        - task: set-vars
+          cmd:
+            - echo "pqm_characteristics/functional_completeness/pypi.robot" > .bob/var.robot-test-suite-to-run
+            - echo "tc1 tc2 tc3 tc4" > .bob/var.robot-include-tag
+            - echo "none" > .bob/var.robot-exclude-tag
+            - echo "functional-completeness" > .bob/var.robot-test-report-dir
+            - echo "robot" > .bob/var.robot-executable
+        - rule: robot-test-runner
+
+    helm-delete:
+        - task: cleanup-release
+          docker-image: adp-helm-kubectl
+          docker-flags: *docker_flags_kube_config_test
+          cmd: helm uninstall ${env.HELM_RELEASE} --namespace ${env.K8S_NAMESPACE} || true
+
+    delete-namespace:
+        - task: cleanup-namespace
+          docker-image: adp-helm-kubectl
+          docker-flags: *docker_flags_kube_config_test
+          cmd: kubectl delete ns ${env.K8S_NAMESPACE} || true
+        
+
+    kaas-info:
+        - task: get-kaas-info
+          docker-image: adp-helm-kubectl
+          docker-flags: *docker_flags_kube_config_test
+          cmd:
+              - kubectl get nodes -o=jsonpath='{.items[0].metadata.labels.kaas/version}' > .bob/var.kaas-version
+              - kubectl config current-context > .bob/var.kaas-current-context
+        - task: output-kaas-info
+          docker-image: adp-helm-kubectl
+          docker-flags: *docker_flags_kube_config_test
+          cmd:
+              - echo -e '# KaaS Version:' >> ${env.KAAS_INFO_FILE} >> ${env.KAAS_INFO_FILE}
+              - kubectl get nodes -o=jsonpath='{.items[0].metadata.labels.kaas/version}' >> ${env.KAAS_INFO_FILE}
+              - echo -e '\n\n# CCD Version:' >> ${env.KAAS_INFO_FILE} >> ${env.KAAS_INFO_FILE}
+              - kubectl get nodes -o=jsonpath='{.items[0].metadata.labels.erikube/version}' >> ${env.KAAS_INFO_FILE}
+              - echo -e '\n\n# KaaS Release Information:' >> ${env.KAAS_INFO_FILE}
+              - echo -e "Ericsson Web Services - https://ews.rnd.gic.ericsson.se/cd.php?cluster=${var.kaas-current-context}" >> ${env.KAAS_INFO_FILE}
+              - echo -e "KaaS release information - https://eteamspace.internal.ericsson.com/display/EWS/${var.kaas-version}" >> ${env.KAAS_INFO_FILE}
+              - echo -e '\n# Kubectl Version:' >> ${env.KAAS_INFO_FILE}
+              - kubectl version >> ${env.KAAS_INFO_FILE}
+              - echo -e '\n# Kubectl Cluster Info:' >> ${env.KAAS_INFO_FILE} >> ${env.KAAS_INFO_FILE}
+              - kubectl cluster-info | sed 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' >> ${env.KAAS_INFO_FILE}
+              - echo -e '\n# Kubectl Config Context:' >> ${env.KAAS_INFO_FILE} >> ${env.KAAS_INFO_FILE}
+              - kubectl config get-contexts >> ${env.KAAS_INFO_FILE}
+              - echo -e '\n# Helm Version:' >> ${env.KAAS_INFO_FILE}
+              - helm version >> ${env.KAAS_INFO_FILE}
+
+    collect-k8s-logs:
+        - task: collect-logs-using-script
+          docker-image: adp-helm-kubectl
+          docker-flags:
+              - ${env.DOCKER_NETWORK}
+              - "--env ENABLE_HELM_V3"
+              - "--env HOME=${env.HOME}"
+              - "--env K8S_NAMESPACE=${env.K8S_NAMESPACE}"
+              - "--env KUBECONFIG=${env.KUBECONFIG}"
+              - "--env HELM_VERSION"
+              - "--env KUBECTL_VERSION"
+              - "--env SELI_ARTIFACTORY_REPO_USER=${env.SELI_ARTIFACTORY_REPO_USER}"
+              - "--env SELI_ARTIFACTORY_REPO_PASS=${env.SELI_ARTIFACTORY_REPO_PASS}"
+              - "--env COLLECT_LOGS_SCRIPT_LOCATION"
+              - "--env COLLECT_LOGS_SCRIPT_FILE_NAME"
+              - "--env COLLECT_LOGS_SINCE_RELATIVE_TIME"
+              - "--env COLLECT_LOGS_DIR"
+              - "--env HOME=${env.HOME}"
+              - "--volume ${env.HOME}:${env.HOME}"
+              - "--volume ${env.KUBECONFIG}:${env.KUBECONFIG}"
+          cmd:
+              - mkdir -p ${env.COLLECT_LOGS_DIR}
+              - kubectl config view > ${env.COLLECT_LOGS_DIR}/kubectl.config
+              - kubectl get ns > ${env.COLLECT_LOGS_DIR}/kubectl-get-ns.log
+              - helm ls -Aa > ${env.COLLECT_LOGS_DIR}/helm-ls-Aa.log
+              - printenv | grep -v CREDENTIALS | grep -v ARTIFACTORY > ${env.COLLECT_LOGS_DIR}/printenv.log
+              - curl -u ${env.SELI_ARTIFACTORY_REPO_USER}:${env.SELI_ARTIFACTORY_REPO_PASS} ${env.COLLECT_LOGS_SCRIPT_LOCATION}/${env.COLLECT_LOGS_SCRIPT_FILE_NAME} > ${env.COLLECT_LOGS_DIR}/${env.COLLECT_LOGS_SCRIPT_FILE_NAME}
+              - chmod 777 ${env.COLLECT_LOGS_DIR}/${env.COLLECT_LOGS_SCRIPT_FILE_NAME}
+              - sh -c "cd ${env.COLLECT_LOGS_DIR} && ./${env.COLLECT_LOGS_SCRIPT_FILE_NAME} ${env.K8S_NAMESPACE} ${env.COLLECT_LOGS_SINCE_RELATIVE_TIME}"
+
+    prepare-values-file:
+        - task: init
+          cmd:
+            - echo "${helm-params}" >  ${env.PWD}/.bob/var.dynamic-properties
+            - cp ${env.PWD}/ci/values/lcm-packagae-reposistory-py-values.tmpl ${helm-values-file}
+        - task: values-file-prep
+          cmd: bash -c '
+                set -ex;
+                while read -r propKeyValue; do
+                  if [[ $propKeyValue == *"="* ]]; then
+                    key=$(echo $propKeyValue | cut -d= -f1);
+                    value=$(echo $propKeyValue | cut -d= -f2);
+                    sed -i "s|$key|$value|g" ${helm-values-file};
+                  fi;
+                done <<< "$(cat ${env.PWD}/.bob/var.dynamic-properties)";'
+        - task: values-file-print
+          cmd:
+              - cat ${helm-values-file}
+
+    pra-prerequisites:
+        - task: copy-helm-version
+          cmd: cat ../.bob/var.helm-version > .bob/var.helm-version
+        - task: copy-helm-release-package
+          cmd: mkdir -p build/charts; cp -r ../build/charts/* build/charts/
+
+    helm-install-prep:
+         - rule: namespace-find-and-clean
+         - rule: helm-create-namespace
+         - rule: dependencies.install
+         - rule: prepare-values-file
+
+    dry-run:
+        - rule: helm-install-dry-run
+
+    install-logshipper-integration-chart:
+        - rule: helm-install-prep
+        - rule: install-integration-chart
+        - rule: helm-healthcheck    
+
+    install:
+        - rule: helm-install-prep
+        - rule: helm-install-or-upgrade-from-local
+        - rule: helm-healthcheck
+
+    install-without-dependencies:
+        - rule: prepare-values-file
+        - rule: helm-install-or-upgrade-from-local
+        - rule: helm-healthcheck
+
+    install-pra:
+        - rule: pra-prerequisites
+        - rule: helm-install-prep
+        - rule: helm-install-or-upgrade-from-local
+        - rule: helm-healthcheck
+
+    upgrade:
+        - rule: prepare-values-file
+        - rule: helm-prepare-repo-drop
+        - rule: helm-install-or-upgrade-from-arm
+        - rule: helm-healthcheck
+    
+    install-latest-drop: 
+        - rule: helm-install-prep
+        - rule: helm-prepare-repo-drop
+        - rule: helm-install-or-upgrade-from-arm
+        - rule: helm-healthcheck
+        
+    rollback:
+        - rule: helm-rollback
+        - rule: helm-healthcheck 
+
+    install-released-arm:
+        - rule: helm-install-prep
+        - rule: helm-prepare-repo-released
+        - rule: helm-install-or-upgrade-from-arm
+        - rule: helm-healthcheck
+
+    test:
+        - rule: robot-functional-completeness
+    
+    test-weekly:
+      - rule: robot-functional-completeness-weekly
+
+    cleanup:
+        - rule: helm-delete
+        - rule: dependencies.delete
+    
+    delete:
+        - rule: helm-delete

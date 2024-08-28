@@ -1,0 +1,16 @@
+global:
+  registry:
+    url: {{ .Values.registry.url }}
+  pullSecret: {{ .Values.registry.pullSecret }}
+nameOverride: {{ .Values.ericMeshGatewaysNameOverride }}
+replicaCount: 2
+service:
+  type: ClusterIP
+podAnnotations:
+  proxy.istio.io/config: |-
+          proxyStatsMatcher:
+            inclusionPrefixes:
+            - "cluster"
+            - "http"
+            - "upstream"
+            - "downstream"

@@ -1,0 +1,609 @@
+{
+    "ADP-Microservice-Characteristics-Report": {
+        "model_version": "2.0.0",
+        "service": {
+            "name": "Python Package Repository",
+            "version": "1.0.0"
+        },
+        "resource-configuration": [
+            {
+                "flavor": "standard",
+                "resources": [
+                    {
+                        "pod": "eric-lcm-package-repository-py",
+                        "instances": 1,
+                        "containers": [
+                            {
+                                "name": "eric-lcm-package-repository-py",
+                                "cpu-req": "1000m",
+                                "cpu-limit": "2000m",
+                                "mem-req": "512Mi",
+                                "mem-limit": "2048Mi",
+                                "optional-container-metadata": {}
+                            },
+                            {
+                                "name": "logshipper",
+                                "cpu-req": "25m",
+                                "cpu-limit": "40m",
+                                "mem-req": "25Mi",
+                                "mem-limit": "50Mi",
+                                "optional-container-metadata": {}
+                            },
+                            {
+                                "name": "istio-proxy",
+                                "cpu-req": "100m",
+                                "cpu-limit": "2000m",
+                                "mem-req": "128Mi",
+                                "mem-limit": "1024Mi",
+                                "optional-container-metadata": {}
+                            },
+                            {
+                                "name": "bragent",
+                                "cpu-req": "300m",
+                                "cpu-limit": "1500m",
+                                "mem-req": "128Mi",
+                                "mem-limit": "1280Mi",
+                                "optional-container-metadata": {}
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "results": [
+            {
+                "use-case": "uc1-Deploy",
+                "description": "Deploy Python Package Repository.",
+                "duration": 50,
+                "labels": [
+                    "Python Package Repository"
+                ],
+                "used-resources-configuration": {
+                    "flavor": "standard",
+                    "resources": [
+                        {
+                            "pod": "eric-lcm-package-repository-py",
+                            "instances": 1,
+                            "containers": [
+                                {
+                                    "name": "eric-lcm-package-repository-py",
+                                    "cpu-req": "1000m",
+                                    "cpu-limit": "2000m",
+                                    "mem-req": "512Mi",
+                                    "mem-limit": "2048Mi",
+                                    "optional-container-metadata": {}
+                                },
+                                {
+                                    "name": "logshipper",
+                                    "cpu-req": "25m",
+                                    "cpu-limit": "40m",
+                                    "mem-req": "25Mi",
+                                    "mem-limit": "50Mi",
+                                    "optional-container-metadata": {}
+                                },
+                                {
+                                    "name": "istio-proxy",
+                                    "cpu-req": "100m",
+                                    "cpu-limit": "2000m",
+                                    "mem-req": "128Mi",
+                                    "mem-limit": "1Gi",
+                                    "optional-container-metadata": {}
+                                },
+                                {
+                                    "name": "bragent",
+                                    "cpu-req": "300m",
+                                    "cpu-limit": "1500m",
+                                    "mem-req": "128Mi",
+                                    "mem-limit": "1280Mi",
+                                    "optional-container-metadata": {}
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "metrics": [
+                    {
+                        "pod": "eric-lcm-package-repository-py",
+                        "container": "eric-lcm-package-repository-py",
+                        "metrics": {
+                            "cpu_avg_milli_cores": 31,
+                            "memory_avg_mib": 30
+                        }
+                    },
+                    {
+                        "pod": "eric-lcm-package-repository-py",
+                        "container": "istio-proxy",
+                        "metrics": {
+                            "cpu_avg_milli_cores": 140,
+                            "memory_avg_mib": 65
+                        }
+                    },
+                    {
+                        "pod": "eric-lcm-package-repository-py",
+                        "container": "logshipper",
+                        "metrics": {
+                            "cpu_avg_milli_cores": 9,
+                            "memory_avg_mib": 12
+                        }
+                    },
+                    {
+                        "pod": "eric-lcm-package-repository-py",
+                        "container": "bragent",
+                        "metrics": {
+                            "cpu_avg_milli_cores": 4,
+                            "memory_avg_mib": 30
+                        }
+                    }
+                ]
+            },
+            {
+                "use-case": "uc1-Performance Efficiency-Time Behavior - Time Taken to upload ~100MB python wheel package",
+                "description": "Capturing the time taken to upload ~100MB package to python package repository.",
+                "duration": 4,
+                "labels": [
+                    "performance"
+                ],
+                "used-resources-configuration": {
+                    "flavor": "standard",
+                    "resources": [
+                        {
+                            "pod": "eric-lcm-package-repository-py-0",
+                            "instances": 1,
+                            "containers": [
+                                {
+                                    "name": "eric-lcm-package-repository-py"
+                                }
+                            ]
+                        },
+                        {
+                            "pod": "eric-lcm-package-repository-py-0",
+                            "instances": 1,
+                            "containers": [
+                                {
+                                    "name": "istio-proxy"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "metrics": [
+                    {
+                        "pod": "eric-lcm-package-repository-py-0",
+                        "container": "eric-lcm-package-repository-py",
+                        "metrics": {
+                            "cpu_avg_milli_cores": 146,
+                            "memory_avg_mib": 38
+                        }
+                    },
+                    {
+                        "pod": "eric-lcm-package-repository-py-0",
+                        "container": "istio-proxy",
+                        "metrics": {
+                            "cpu_avg_milli_cores": 17,
+                            "memory_avg_mib": 56
+                        }
+                    }
+                ]
+            },
+            {
+                "use-case": "uc2-Performance Efficiency-Time Behavior - Time Taken to upload ~500MB python wheel package",
+                "description": "Capturing the time taken to upload ~500MB package to python package repository.",
+                "duration": 15,
+                "labels": [
+                    "performance"
+                ],
+                "used-resources-configuration": {
+                    "flavor": "standard",
+                    "resources": [
+                        {
+                            "pod": "eric-lcm-package-repository-py-0",
+                            "instances": 1,
+                            "containers": [
+                                {
+                                    "name": "eric-lcm-package-repository-py"
+                                }
+                            ]
+                        },
+                        {
+                            "pod": "eric-lcm-package-repository-py-0",
+                            "instances": 1,
+                            "containers": [
+                                {
+                                    "name": "istio-proxy"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "metrics": [
+                    {
+                        "pod": "eric-lcm-package-repository-py-0",
+                        "container": "eric-lcm-package-repository-py",
+                        "metrics": {
+                            "cpu_avg_milli_cores": 486,
+                            "memory_avg_mib": 61
+                        }
+                    },
+                    {
+                        "pod": "eric-lcm-package-repository-py-0",
+                        "container": "istio-proxy",
+                        "metrics": {
+                            "cpu_avg_milli_cores": 67,
+                            "memory_avg_mib": 52
+                        }
+                    }
+                ]
+            },
+            {
+                "use-case": "uc3-Performance Efficiency-Time Behavior - Time Taken to upload ~850MB python wheel package",
+                "description": "Capturing the time taken to upload ~850MB package to python package repository.",
+                "duration": 25,
+                "labels": [
+                    "performance"
+                ],
+                "used-resources-configuration": {
+                    "flavor": "standard",
+                    "resources": [
+                        {
+                            "pod": "eric-lcm-package-repository-py-0",
+                            "instances": 1,
+                            "containers": [
+                                {
+                                    "name": "eric-lcm-package-repository-py"
+                                }
+                            ]
+                        },
+                        {
+                            "pod": "eric-lcm-package-repository-py-0",
+                            "instances": 1,
+                            "containers": [
+                                {
+                                    "name": "istio-proxy"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "metrics": [
+                    {
+                        "pod": "eric-lcm-package-repository-py-0",
+                        "container": "eric-lcm-package-repository-py",
+                        "metrics": {
+                            "cpu_avg_milli_cores": 760,
+                            "memory_avg_mib": 71
+                        }
+                    },
+                    {
+                        "pod": "eric-lcm-package-repository-py-0",
+                        "container": "istio-proxy",
+                        "metrics": {
+                            "cpu_avg_milli_cores": 99,
+                            "memory_avg_mib": 60
+                        }
+                    }
+                ]
+            },
+            {
+                "use-case": "uc4-Performance Efficiency-Time Behavior - Time Taken to install ~100MB python wheel package",
+                "description": "Capturing the time taken to install ~100MB package to python package repository.",
+                "duration": 4,
+                "labels": [
+                    "performance"
+                ],
+                "used-resources-configuration": {
+                    "flavor": "standard",
+                    "resources": [
+                        {
+                            "pod": "eric-lcm-package-repository-py-0",
+                            "instances": 1,
+                            "containers": [
+                                {
+                                    "name": "eric-lcm-package-repository-py"
+                                }
+                            ]
+                        },
+                        {
+                            "pod": "eric-lcm-package-repository-py-0",
+                            "instances": 1,
+                            "containers": [
+                                {
+                                    "name": "istio-proxy"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "metrics": [
+                    {
+                        "pod": "eric-lcm-package-repository-py-0",
+                        "container": "eric-lcm-package-repository-py",
+                        "metrics": {
+                            "cpu_avg_milli_cores": 38,
+                            "memory_avg_mib": 151
+                        }
+                    },
+                    {
+                        "pod": "eric-lcm-package-repository-py-0",
+                        "container": "istio-proxy",
+                        "metrics": {
+                            "cpu_avg_milli_cores": 10,
+                            "memory_avg_mib": 53
+                        }
+                    }
+                ]
+            },
+            {
+                "use-case": "uc5-Performance Efficiency-Time Behavior - Time Taken to install ~500MB python wheel package",
+                "description": "Capturing the time taken to install ~500MB package to python package repository.",
+                "duration": 7,
+                "labels": [
+                    "performance"
+                ],
+                "used-resources-configuration": {
+                    "flavor": "standard",
+                    "resources": [
+                        {
+                            "pod": "eric-lcm-package-repository-py-0",
+                            "instances": 1,
+                            "containers": [
+                                {
+                                    "name": "eric-lcm-package-repository-py"
+                                }
+                            ]
+                        },
+                        {
+                            "pod": "eric-lcm-package-repository-py-0",
+                            "instances": 1,
+                            "containers": [
+                                {
+                                    "name": "istio-proxy"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "metrics": [
+                    {
+                        "pod": "eric-lcm-package-repository-py-0",
+                        "container": "eric-lcm-package-repository-py",
+                        "metrics": {
+                            "cpu_avg_milli_cores": 141,
+                            "memory_avg_mib": 547
+                        }
+                    },
+                    {
+                        "pod": "eric-lcm-package-repository-py-0",
+                        "container": "istio-proxy",
+                        "metrics": {
+                            "cpu_avg_milli_cores": 48,
+                            "memory_avg_mib": 54
+                        }
+                    }
+                ]
+            },
+            {
+                "use-case": "uc6-Performance Efficiency-Time Behavior - Time Taken to install ~850MB python wheel package",
+                "description": "Capturing the time taken to install ~850MB package to python package repository.",
+                "duration": 13,
+                "labels": [
+                    "performance"
+                ],
+                "used-resources-configuration": {
+                    "flavor": "standard",
+                    "resources": [
+                        {
+                            "pod": "eric-lcm-package-repository-py-0",
+                            "instances": 1,
+                            "containers": [
+                                {
+                                    "name": "eric-lcm-package-repository-py"
+                                }
+                            ]
+                        },
+                        {
+                            "pod": "eric-lcm-package-repository-py-0",
+                            "instances": 1,
+                            "containers": [
+                                {
+                                    "name": "istio-proxy"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "metrics": [
+                    {
+                        "pod": "eric-lcm-package-repository-py-0",
+                        "container": "eric-lcm-package-repository-py",
+                        "metrics": {
+                            "cpu_avg_milli_cores": 282,
+                            "memory_avg_mib": 888
+                        }
+                    },
+                    {
+                        "pod": "eric-lcm-package-repository-py-0",
+                        "container": "istio-proxy",
+                        "metrics": {
+                            "cpu_avg_milli_cores": 55,
+                            "memory_avg_mib": 56
+                        }
+                    }
+                ]
+            },
+            {
+                "use-case": "uc7-Performance Efficiency-Capacity - Executing 5 concurrent python package installation, package size-850MB",
+                "description": "Capturing the average time taken and resource utilized by the Python package repository to do 5 concurrent python package installation of same package sized 850MB.",
+                "duration": 23,
+                "labels": [
+                    "performance"
+                ],
+                "used-resources-configuration": {
+                    "flavor": "standard",
+                    "resources": [
+                        {
+                            "pod": "eric-lcm-package-repository-py-0",
+                            "instances": 1,
+                            "containers": [
+                                {
+                                    "name": "eric-lcm-package-repository-py"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "metrics": [
+                    {
+                        "pod": "eric-lcm-package-repository-py-0",
+                        "container": "eric-lcm-package-repository-py",
+                        "metrics": {
+                            "cpu_avg_milli_cores": 898,
+                            "memory_avg_mib": 899
+                        }
+                    }
+                ]
+            },
+            {
+                "use-case": "uc8-Performance Efficiency-Capacity - Executing 6 concurrent python package installation, package size-850MB",
+                "description": "Capturing the average time taken and resource utilized by the Python package repository to do 6 concurrent python package installation of same package sized 850MB.",
+                "duration": 23,
+                "labels": [
+                    "performance"
+                ],
+                "used-resources-configuration": {
+                    "flavor": "standard",
+                    "resources": [
+                        {
+                            "pod": "eric-lcm-package-repository-py-0",
+                            "instances": 1,
+                            "containers": [
+                                {
+                                    "name": "eric-lcm-package-repository-py"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "metrics": [
+                    {
+                        "pod": "eric-lcm-package-repository-py-0",
+                        "container": "eric-lcm-package-repository-py",
+                        "metrics": {
+                            "cpu_avg_milli_cores": 1211,
+                            "memory_avg_mib": 907
+                        }
+                    }
+                ]
+            },
+            {
+                "use-case": "uc9-Performance Efficiency-Capacity - Executing 7 concurrent python package installation, package size-850MB",
+                "description": "Capturing the average time taken and resource utilized by the Python package repository to do 7 concurrent python package installation of same package sized 850MB.",
+                "duration": 27,
+                "labels": [
+                    "performance"
+                ],
+                "used-resources-configuration": {
+                    "flavor": "standard",
+                    "resources": [
+                        {
+                            "pod": "eric-lcm-package-repository-py-0",
+                            "instances": 1,
+                            "containers": [
+                                {
+                                    "name": "eric-lcm-package-repository-py"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "metrics": [
+                    {
+                        "pod": "eric-lcm-package-repository-py-0",
+                        "container": "eric-lcm-package-repository-py",
+                        "metrics": {
+                            "cpu_avg_milli_cores": 1220,
+                            "memory_avg_mib": 910
+                        }
+                    }
+                ]
+            },
+            {
+                "use-case": "uc10-Performance Efficiency-Capacity - Executing 3 concurrent python package installation, different packages size-850MB",
+                "description": "Capturing the average time taken and resource utilized by the Python package repository to do 3 concurrent python package installation of different packages sized 850MB.",
+                "duration": 14,
+                "labels": [
+                    "performance"
+                ],
+                "used-resources-configuration": {
+                    "flavor": "standard",
+                    "resources": [
+                        {
+                            "pod": "eric-lcm-package-repository-py-0",
+                            "instances": 1,
+                            "containers": [
+                                {
+                                    "name": "eric-lcm-package-repository-py"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "metrics": [
+                    {
+                        "pod": "eric-lcm-package-repository-py-0",
+                        "container": "eric-lcm-package-repository-py",
+                        "metrics": {
+                            "cpu_avg_milli_cores": 1130,
+                            "memory_avg_mib": 578
+                        }
+                    }
+                ]
+            },
+            {
+                "use-case": "uc11-Performance Efficiency-Capacity - Executing 4 concurrent python package installation, different packages size-850MB",
+                "description": "Capturing the average time taken and resource utilized by the Python package repository to do 4 concurrent python package installation of different packages sized 850MB.",
+                "duration": 15,
+                "labels": [
+                    "performance"
+                ],
+                "used-resources-configuration": {
+                    "flavor": "standard",
+                    "resources": [
+                        {
+                            "pod": "eric-lcm-package-repository-py-0",
+                            "instances": 1,
+                            "containers": [
+                                {
+                                    "name": "eric-lcm-package-repository-py"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "metrics": [
+                    {
+                        "pod": "eric-lcm-package-repository-py-0",
+                        "container": "eric-lcm-package-repository-py",
+                        "metrics": {
+                            "cpu_avg_milli_cores": 1277,
+                            "memory_avg_mib": 587
+                        }
+                    }
+                ]
+            }            
+        ],
+        "test-environment": {
+            "cluster": "hall022",
+            "cpu": {
+              "model": "Intel Xeon Processor (Cascadelake)",
+              "CPU-MHz": 2294.608,
+              "bogomips": 4589.21
+            },
+            "memory": "512GB",
+            "kaas": "",
+            "kubernetes-version": "v1.29.1",
+            "other-info": {
+                "cpu_cores": "128"
+            }
+        }
+    }
+}

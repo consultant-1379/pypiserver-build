@@ -1,0 +1,15 @@
+Create directories with version numbers. 
+Each version directory should have the below three files
+
+Each folder can contain three files:
+
+- pre
+        Any bob rule that needs to be executed before delta commands. This is because, in the delta, we cannot have a bob rule added, as delta file itself will run from a bob rule. So, calling a bob rule from a bob rule is not supported.
+
+- delta
+        This file contains the commands that needs to be executed for that specific upgrade path. This will be initiated via a bob rule from mlops-builder codebase
+
+- post
+        Any bob rule that needs to be executed after commands in delta file. This is because, in the delta, we cannot have a bob rule added, as delta file itself will run from a bob rule. So, calling a bob rule from a bob rule is not supported. 
+
+When snowball upgrade is done the folders between the upgrade from and to versions will be executed sequentially.

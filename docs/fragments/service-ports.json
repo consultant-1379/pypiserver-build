@@ -1,0 +1,31 @@
+{
+    "metadata": {
+        "serviceHelmChartName": "eric-lcm-package-repository-py",
+        "usedSchemaVersion": "1.0",
+        "fileVersion": "1.0.0",
+        "dateEdited": "2023-12-05"
+    },
+    "internalPorts": [
+        {
+            "serviceInterfaceName": "Python Package Repository",
+            "protocol": "HTTPS",
+            "ipAddressType": "",
+            "port": 8080,
+            "transportProtocol": "TCP",
+            "ipVersion": [
+                "IPv4"
+            ]
+        },
+        {
+            "serviceInterfaceName": "BR Agent Service",
+            "protocol": "HTTPS",
+            "ipAddressType": "TRAFFIC IP",
+            "port": 8081,
+            "transportProtocol": "TCP",
+            "ipVersion": [
+                "IPv4"
+            ]
+        }
+    ],
+    "externalPorts": []
+}

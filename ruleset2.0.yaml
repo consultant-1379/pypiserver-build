@@ -1,0 +1,346 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+modelVersion: 2.0
+
+description: "AI/ML LibraryManager"
+
+# See image catalog: https://confluence.lmera.ericsson.se/display/ACD/ADP+CICD+Docker+Image+Catalog
+docker-images:
+    - adp-release-auto: armdocker.rnd.ericsson.se/proj-adp-cicd-drop/bob-adp-release-auto:${env.RELEASE_AUTO_TAG}
+    - ci-toolkit: armdocker.rnd.ericsson.se/proj-mxe-ci-internal/ci-toolkit:${env.CI_TOOLKIT_TAG}
+
+import:
+    common: rulesets/common-properties.yaml
+    build: rulesets/build.yaml
+    3pp: rulesets/3pp.yaml
+    mimer: rulesets/mimer.yaml
+    test: rulesets/test.yaml
+    docs: docs/ruleset2.0.yaml
+    infra: mlops-utils/rulesets/common/common-ruleset.yaml
+# List of constants
+properties:
+    - image-secret: armdocker
+    - image-dev-repopath: ${common.image-registry-path}-dev
+    - image-ci-repopath: ${common.image-registry-path}-ci-internal
+    - image-drop-repopath: ${common.image-drop-repopath}
+
+    # Helm Chart name must follow the pattern: eric-[a-z0-9]{1,5}-[a-z0-9-]{1,30}
+    - helm-chart-dev-repopath: ${common.helm-chart-repo-server-path}-dev-helm/
+    - helm-chart-ci-repopath: ${common.helm-chart-repo-server-path}-ci-internal-helm
+
+# import environment variables (For example: Jenkins parameters)
+env:
+    - DOCKER_NETWORK (default=--network host)
+    - HOME
+    - MAVEN_CLI_OPTS (default=-Duser.home=${env.HOME} -B)
+    - PWD
+    - RELEASE (default=false)
+
+    # Kubernetes
+    - BUILD_DIR (default=./build)
+
+    # Default docker image tags
+    - RELEASE_AUTO_TAG (default=latest)
+    - CI_TOOLKIT_TAG (default=latest)
+
+    - SELI_ARTIFACTORY_REPO_API_KEY
+
+# Variables, set by below tasks
+var:
+    - commithash
+    - commithash-full
+    - commit-author
+    - commit-email
+    - image-registry
+    - image-full-name-internal
+    - image-full-name
+    - image-repopath-internal
+    - image-repopath-drop
+    - pom-version
+    - revision
+    - rstate
+    - version
+    - version-prefix
+    - semver
+
+# Rules to execute
+rules:
+    # Clean workspace
+    clean:
+        - task: rm
+          cmd:
+              - rm -rf .bob/
+              - rm -rf .bob/
+              - rm -f artifact.properties
+        - rule: build.clean
+        #- rule: test.clean
+        #- rule: docs.clean
+        - rule: 3pp.clean
+        
+    # Common tasks for all init rules
+    init-common:
+        - task: version
+          docker-image: adp-release-auto
+          docker-flags:
+              - "--env RELEASE"
+          cmd: generate-version --is-release ${env.RELEASE} --output version
+        - task: rstate
+          docker-image: adp-release-auto
+          cmd: get_rstate.py ${var.version} > .bob/var.rstate
+        - task: commit
+          docker-image: adp-release-auto
+          cmd:
+              - git rev-parse --short HEAD > .bob/var.commithash
+              - git rev-parse HEAD > .bob/var.commithash-full
+              - git log -1 --format='%aN' > .bob/var.commit-author
+              - git log -1 --format='%aE' > .bob/var.commit-email
+        - task: helm-version
+          cmd: cat .bob/var.version > .bob/var.helm-version
+        - task: create-temp-dir
+          cmd: mkdir -p ${env.BUILD_DIR}
+        - rule: build.init
+        - rule: 3pp.init
+        - task: download-stdout-redirect
+          docker-image: ci-toolkit
+          docker-envs:
+            - SELI_ARTIFACTORY_REPO_API_KEY
+          cmd:
+            - curl -H "X-JFrog-Art-Api":" ${env.SELI_ARTIFACTORY_REPO_API_KEY}" ${common.stdout-redirect-package-url} | tar -x  -C build
+
+    # Dev Tasks: only used by manually publishing development/black builds by developers
+    init-dev:
+        - rule: init-common
+        - task: preliminary-revision # For example: PA1
+          cmd: RSTATE=${var.rstate} && echo P${RSTATE:2}1 > .bob/var.revision
+        - task: image-repopath-internal
+          cmd: echo "${image-dev-repopath}" | cut -f2- -d '/' > .bob/var.image-repopath-internal
+        - task: image-registry
+          cmd: echo "${image-dev-repopath}" | cut -f1 -d '/' > .bob/var.image-registry
+        - task: image-full-name-internal
+          cmd: echo "${image-dev-repopath}/${common.docker-image-name}" > .bob/var.image-full-name-internal
+        - task: helm-chart-repo-internal
+          cmd: echo "${helm-chart-dev-repopath}" > .bob/var.helm-chart-repo-internal
+
+
+    # CI-Internal Tasks: used by CI to use as temporary storage for testing, only CI user has write access.
+    init-precodereview:
+        - rule: init-common
+        - task: preliminary-revision # For example: PA1
+          cmd: RSTATE=${var.rstate} && echo P${RSTATE:2}1 > .bob/var.revision
+        - task: image-repopath-internal
+          cmd: echo "${image-ci-repopath}" | cut -f2- -d '/' > .bob/var.image-repopath-internal
+        - task: image-registry
+          cmd: echo "${image-ci-repopath}" | cut -f1 -d '/' > .bob/var.image-registry
+        - task: image-full-name-internal
+          cmd: echo "${image-ci-repopath}/${common.docker-image-name}" > .bob/var.image-full-name-internal
+        - task: helm-chart-repo-internal
+          cmd: echo "${helm-chart-ci-repopath}" > .bob/var.helm-chart-repo-internal
+    
+    # Drop level tasks: used by CI to publish artifacts after successful CI pipeline execution for a drop build
+    init-drop:
+        - rule: init-common
+        - task: generate-semvar
+          docker-image: adp-release-auto
+          cmd: cat .bob/var.version | cut -d '-' -f 1 > .bob/var.semver
+        - task: full-revision # For example: A (Note: The Letters I O P Q R W must never be used for Document Revisioning.
+          cmd: RSTATE=${var.rstate} && echo P${RSTATE:2}1 > .bob/var.revision
+        - task: image-repopath-internal
+          cmd: echo "${image-ci-repopath}" | cut -f2- -d '/' > .bob/var.image-repopath-internal
+        - task: image-repopath-drop
+          cmd: echo "${image-drop-repopath}" | cut -f2- -d '/' > .bob/var.image-repopath-drop
+        - task: image-registry
+          cmd: echo "${image-ci-repopath}" | cut -f1 -d '/' > .bob/var.image-registry
+        - task: image-full-name-internal
+          cmd: echo "${image-ci-repopath}/${common.docker-image-name}" > .bob/var.image-full-name-internal
+        - task: image-full-name
+          cmd: echo "${image-drop-repopath}/${common.docker-image-name}" > .bob/var.image-full-name
+        - task: helm-chart-repo-internal
+          cmd: echo "${helm-chart-ci-repopath}" > .bob/var.helm-chart-repo-internal
+        - task: adp-artifacts-properties
+          docker-image: adp-release-auto
+          cmd: generate-adp-artifacts
+              --chart-name ${common.helm-chart-name}
+              --chart-version ${var.version}
+              --chart-repo ${common.helm-chart-drop-repopath}
+              --image-name ${common.docker-image-name}
+              --image-version ${var.version}
+              --image-repo "${var.image-registry}/${var.image-repopath-drop}"  
+        - task: write-git-details
+          cmd:
+              - echo "GIT_TAG=$(git log -1 --pretty=format:'%h')" >> artifact.properties
+              - echo "GIT_COMMIT_AUTHOR=$(git log -1 --pretty=format:'%an')" >> artifact.properties
+              - echo "GIT_COMMIT_AUTHOR_EMAIL=$(git log -1 --format='%aE')" >> artifact.properties
+              - echo "GIT_COMMIT_SUMMARY=$(git log -1 --pretty=format:'%s')" >> artifact.properties
+        - task: write-release-details
+          cmd:
+              - echo "RELEASE=${env.RELEASE}" >> artifact.properties
+
+    #lint
+    lint-helm:
+        - rule: build.lint-helm
+        #- rule: crd.lint
+    lint-license-check:
+        - rule: build.lint-license-check
+    add-missing-license:
+        - rule: build.add-missing-license    
+    lint-checkstyle:
+        - rule: build.lint-checkstyle
+    lint-frontend:
+        - rule: build.lint-frontend
+    lint-metrics-check:
+        - rule: build.lint-metrics-check
+    lint-markdown:
+        - rule: docs.lint-markdown
+    lint-vale:
+        - rule: docs.lint-vale
+    lint-oas:
+        - rule: docs.lint-oas
+    lint-json:
+        - rule: docs.lint-json
+    lint-helm-dr-check:
+        - rule: build.helm-dr-check
+    
+    # Build a docker image pointing to dirty repository
+    image:
+        - rule: image-pypiserver
+    image-pypiserver:
+        - rule: build.image-pypiserver
+        - rule: build.image-push-internal
+    
+    # Delete docker images created
+    delete-images-internal:
+        - rule: build.image-delete-internal
+    delete-images:
+        - rule: build.image-delete-internal
+        - rule: build.image-delete-drop
+
+    # Check for image design rule compliance
+    image-dr-check:
+        - rule: build.image-dr-check
+
+    # Push image to ci-internal repo, create internal version of helm chart and pushes it to internal repo
+    package:
+        - rule: build.helm-package
+        
+    publish-chart-local:
+        - rule: build.helm-upload-internal
+    
+    # Publish docker images and helm charts to drop repository
+    # Call publish only when merged to master
+    publish-image:
+        - rule: build.image-push
+
+    publish-chart:
+        - rule: build.helm-package-publish
+
+    docs-marketplace-generate:
+        - rule: docs.build
+
+    docs-marketplace-publish:
+        - rule: docs.publish:indevelop
+
+    # Test
+    helm-dry-run:
+        - rule: test.dry-run
+    helm-install:
+        - rule: test.install
+    helm-install-without-dependencies:
+        - rule: test.install-without-dependencies
+    helm-install-pra:
+        - rule: test.install-pra
+    helm-upgrade:
+        - rule: test.upgrade
+    helm-rollback:
+        - rule: test.rollback
+    helm-upgrade-drop:
+        - rule: test.upgrade
+    helm-install-released:
+        - rule: test.install-released-arm                
+    helm-install-va:
+        - rule: test.install-latest-drop
+    helm-install-weekly:
+        - rule: test.install-latest-drop
+    helm-install-latest-drop: 
+        - rule: test.install-latest-drop
+    helm-install-logshipper-integration-chart:
+        - rule: test.install-logshipper-integration-chart    
+    helm-test:
+        - rule: test.test
+    helm-mlops-test:
+        - rule: test.robot-pypiserver-ericsson-mlops
+    helm-test-weekly:
+        - rule: test.test-weekly
+    helm-delete:
+        - rule: test.delete
+    test-cleanup:
+        - rule: test.cleanup
+    kaas-info:
+        - rule: test.kaas-info
+    collect-k8s-logs:
+        - rule: test.collect-k8s-logs
+    delete-namespace:
+        - rule: test.namespace-delete
+    
+    # FOSSA Handling
+    fossa-server-check:
+        - rule: 3pp.fossa-server-check
+    
+    #analyze
+    fossa-pypiserver-analyze:
+        - rule: 3pp.fossa-pypiserver-analyze
+    
+    #status check
+    fossa-pypiserver-scan-status-check:
+        - rule: 3pp.fossa-pypiserver-scan-status-check
+    
+    # report-attribution
+    fetch-pypiserver-fossa-report-attribution:
+        - rule: 3pp.fetch-pypiserver-fossa-report-attribution
+    
+    # dependency-update
+    dependency-pypiserver-update:
+        - rule: 3pp.dependency-pypiserver-update
+    
+    # scan-bazaar
+    scas-scan:
+        - rule: 3pp.scas-pypiserver-scan
+
+    # dependency-validate
+    dependency-validate-pypiserver:
+        - rule: 3pp.dependency-validate-pypiserver
+
+    # WARNING: RUN ONLY MANUALLY THIS RULE
+    scas-register:
+        - rule: 3pp.scas-register
+    license-agreement-generate:
+        - rule: 3pp.license-agreement-generate
+
+    # Generate missing product list for mimer registartion if any.
+    check-foss-in-mimer-pypiserver:
+        - rule: mimer.check-foss-in-mimer-pypiserver
+
+
+    # Get the latest CBOS version and update it
+    cbos-update-version:
+        - rule: build.cbos-update-version
+    
+    update-pypiserver-in-ml-library-manager:
+      - rule: build.update-pypiserver-in-ml-library-manager
+
+    # To be used in post submit pipeline
+    pre-register:
+        - rule: mimer.pre-release  

@@ -1,0 +1,173 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+modelVersion: 2.0
+
+description: "AI/ML Model Lifecycle Manager pypiserver Foss Tasks"
+
+# See image catalog: https://confluence.lmera.ericsson.se/display/ACD/ADP+CICD+Docker+Image+Catalog
+docker-images:
+    - adp-release-auto: armdocker.rnd.ericsson.se/proj-adp-cicd-drop/bob-adp-release-auto:${env.RELEASE_AUTO_TAG}
+    - adp-maven-builder: armdocker.rnd.ericsson.se/proj-adp-cicd-drop/bob-java11mvnbuilder:${env.MVN_BUILDER_TAG}
+    - adp-go-builder: armdocker.rnd.ericsson.se/proj-adp-cicd-drop/bob-gobuilder.adp-base-os:latest
+
+import:
+    common: common-properties.yaml
+
+properties:
+    # FOSSA
+    - fossa-server-endpoint: https://scasfossa.internal.ericsson.com/
+    - fossa-project-name: eric-lcm-package-repository-py
+    - fossa-pypiserver-project-name: ${fossa-project-name}-pypiserver
+    - fossa-pypiserver-report-name: ${env.PWD}/build/fossa/fossa-pypiserver-report.json
+    - fossa-team-name: aiml-mlops-mxe
+    - docker-params: "--workdir ${env.PWD}"
+    - scas-product-id: 8239
+    - scas-product-version: 9724
+    - project-scan-dir: images/pypiserver
+
+env:
+    - DOCKER_NETWORK (default=--network host)
+    - HOME
+    - PWD
+    - MAVEN_OPTS (default=-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn)
+
+    # Default docker image tags
+    - MVN_BUILDER_TAG (default=latest)
+    - RELEASE_AUTO_TAG (default=latest)
+
+    # FOSSA
+    - FOSSA_ARTIFACT_HASH
+    - FOSSA_API_KEY
+    - SCAS_TOKEN
+
+
+var:
+    - version
+    - fossa-available
+
+rules:
+    clean:
+        - task: rm
+          cmd:
+              - rm -rf ./build/fossa/${fossa-pypiserver-report-name}
+    init:
+        - task: fossa-report-dir
+          cmd: mkdir -p build/fossa
+
+    fossa-server-check:
+        - task: check-status
+          docker-image: adp-release-auto
+          cmd:
+              - sh -c 'if curl ${fossa-server-endpoint}; then
+                echo "FOSSA server available.";
+                echo true > .bob/var.fossa-available;
+                else
+                echo "Unable to connect to FOSSA server. Skipping FOSSA Analysis.";
+                echo false > .bob/var.fossa-available;
+                fi'
+    fossa-pypiserver-analyze:
+        - task: fossa-pypiserver-analyze
+          docker-image: adp-go-builder
+          docker-flags:
+              - ${docker-params}
+              - "--env FOSSA_API_KEY=${env.FOSSA_API_KEY}"
+              - "--env PROJECT_NAME=${project-name}"
+              - "--env HOME=${env.HOME}"
+              - "--volume ${env.HOME}:${env.HOME}"
+          cmd: sh -c 'cd ${common.pypiserver-path};fossa analyze --revision ${var.version} --team ${fossa-team-name} --endpoint ${fossa-server-endpoint} --project ${fossa-pypiserver-project-name} --exclude-path ./sdks/' | true
+          cmd:
+             - fossa analyze
+               --revision ${var.version}
+               --team ${fossa-team-name}
+               --endpoint ${fossa-server-endpoint}
+               --project ${fossa-pypiserver-project-name}
+               --only-path ${project-scan-dir}
+
+    fossa-pypiserver-scan-status-check:
+        - task: fossa-scan-status-check
+          docker-image: adp-release-auto
+          docker-flags:
+              - "--env FOSSA_API_KEY=${env.FOSSA_API_KEY}"
+          cmd: fossa_scan_status_check -s ${fossa-server-endpoint} -f custom -p ${fossa-pypiserver-project-name} -r ${var.version} -t ${env.FOSSA_API_KEY} -dl 15
+
+    fetch-pypiserver-fossa-report-attribution:
+        - task: fetch-fossa-report-attribution
+          docker-image: adp-maven-builder
+          docker-flags:
+              - "--env FOSSA_API_KEY=${env.FOSSA_API_KEY}"
+          cmd: fossa report attribution
+              --endpoint ${fossa-server-endpoint}
+              --project ${fossa-pypiserver-project-name}
+              --revision ${var.version} --json --timeout 15000 > ${fossa-pypiserver-report-name}    
+
+    dependency-pypiserver-update:
+        - task: dependency-update
+          docker-image: adp-release-auto
+          cmd: dependencies update
+              --fossa-report ${fossa-pypiserver-report-name}
+              --dependencies ${common.pypiserver-dependency-file-name}
+    
+    scas-pypiserver-scan:
+        - task: scas-scan
+          docker-image: adp-release-auto
+          docker-flags:
+            - "--env HOME=${env.HOME}"
+            - "--env SCAS_TOKEN=${env.SCAS_TOKEN}"
+          cmd: dependencies update
+              --fossa-report ${fossa-pypiserver-report-name}
+              --dependencies ${common.pypiserver-dependency-file-name}
+              --scan-scas
+              --scas-refresh-token ${env.SCAS_TOKEN}
+              --link-dependencies
+              --sort      
+
+    # WARNING: RUN ONLY MANUALLY THIS RULE
+    scas-register:
+        - task: scas-register
+          docker-image: adp-release-auto
+          docker-flags:
+            - "--env HOME=${env.HOME}"
+          cmd: dependencies register
+              --productid ${scas-product-id}
+              --versionid ${scas-product-version}
+              --dependencies ${common.pypiserver-dependency-file-name}
+              --scas
+              --scas-refresh-token ${env.SCAS_TOKEN}
+    
+    dependency-validate-pypiserver:
+        - task: dependency-validate-pypiserver
+          docker-image: adp-release-auto
+          cmd: dependencies validate
+              --dependencies ${common.pypiserver-dependency-file-name}
+              --allow-esw4
+    
+    license-agreement-generate:
+        - task: license-agreement-generate-pypiserver
+          docker-image: adp-release-auto
+          cmd: license-agreement generate
+              --dependencies ${common.pypiserver-dependency-file-name}
+              --fossa-report ${fossa-pypiserver-report-name}
+              --output ${common.license-agreement-file-pypiserver-name}
+
+    license-agreement-merge:
+        - task: merge
+          docker-image: adp-release-auto
+          cmd: license-agreement merge
+              --license-agreement ${common.license-agreement-file-pypiserver-name}
+              --license-agreement ${common.license-agreement-file-rpm-name}
+              --output ${common.license-agreement-file-name}
+    

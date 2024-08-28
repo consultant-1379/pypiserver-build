@@ -1,0 +1,75 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+global:
+  security:
+    tls:
+      enabled: true
+      trustedInternalRootCa:
+        secret: eric-sec-sip-tls-trusted-root-cert
+  serviceMesh:
+    enabled: true
+    annotations:
+      serviceMesh: 1.15.2
+    jwtPolicy: third-party-jwt
+  adpBR:
+    broServiceName: eric-ctrl-bro
+    broGrpcServicePort: 3000
+    brLabelKey: adpbrlabelkey
+
+ingress:
+  enabled: true
+  useHTTPProxy: true
+  ingressClass: eric-tm-ingress-controller-cr
+  hostname: eric-lcm-package-repository-py.ericsson.com
+  tls:
+    enabled: true
+    secretName: eric-lcm-package-repository-py-tls
+    
+# Added for DR: DR-D1125-040
+bandwidth:
+  pypiserver:
+    maxEgressRate: 10M
+
+
+resources:
+  ericLcmPackageRepositoryPy:
+    limits:
+      cpu: 2000m
+      memory: "2Gi"
+      ephemeral-storage: ""
+    requests:
+      cpu: 1000m
+      memory: "512Mi"
+      ephemeral-storage: ""
+  init-load-packages:
+    limits:
+      cpu: 2000m
+      memory: "2Gi"
+      ephemeral-storage: ""
+    requests:
+      cpu: 1000m
+      memory: "512Mi"
+      ephemeral-storage: ""
+brAgent:
+  enabled: true
+  brLabelValue: PythonPackageRepositoryBRAgent
+  # BRA rest api port
+  restPort: 8081
+  logLevel: info
+securityPolicy:
+  bragent:
+    rolename: "eric-lcm-package-repository-py-role"  

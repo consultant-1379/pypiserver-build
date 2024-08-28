@@ -1,0 +1,63 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+bases:
+  - ../common/repositories.yaml
+  - ../common/defaults.yaml
+
+--- 
+
+releases:
+  - name: eric-mesh-controller-crd
+    namespace: {{ requiredEnv "NAMESPACE" }}  
+    chart: adp/eric-mesh-controller-crd
+    values:
+      - "values/default-global-values.gotmpl"
+    hooks:
+    - events: ['postuninstall']
+      showlogs: true
+      command: "/bin/bash"
+      args: 
+       - "-c"
+       - |
+          set -x;
+          echo "Cleaning up resources left behind by eric-mesh-controller-crd";
+          MESH_CRD_RELEASE_NAME='{{`{{.Release.Name}}`}}';
+          NAMESPACE='{{`{{ requiredEnv "NAMESPACE" }}`}}';
+          kubectl delete deployment,statefulset,jobs,pods,svc,ingress,configmap,secret,sa,role,rolebinding,clusterrole,clusterrolebinding,pdb,hpa ${COMMONS_RELEASE_NAME} -l app.kubernetes.io/instance=${MESH_CRD_RELEASE_NAME};
+          kubectl delete CustomResourceDefinition -l app.kubernetes.io/name=eric-mesh-controller-crd;
+  - name: eric-mesh-controller
+    namespace: {{ requiredEnv "NAMESPACE" }} 
+    chart: adp/eric-mesh-controller
+    values: 
+      - "values/eric-mesh-controller-values.gotmpl"
+    set:
+      - name: pilot.jwksResolverExtraRootCA
+        file: {{ requiredEnv "EGADROOTCA_LOCATION" }}
+    needs:
+      - eric-mesh-controller-crd
+  - name: eric-mesh-gateways
+    namespace: {{ requiredEnv "NAMESPACE" }} 
+    chart: adp/eric-mesh-gateways
+    values:
+      - "values/eric-mesh-gateways-values.gotmpl"
+    needs:
+      - eric-mesh-controller
+  - name: eric-lcm-package-repository-py-sm-resources
+    namespace: {{ requiredEnv "NAMESPACE" }} 
+    chart: ../charts/sm-resources
+    needs:
+      - eric-mesh-gateways

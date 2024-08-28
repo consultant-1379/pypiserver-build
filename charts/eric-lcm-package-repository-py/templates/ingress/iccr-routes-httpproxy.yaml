@@ -1,0 +1,50 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+{{- if .Values.ingress.createRoutes }}
+{{- $gwTLS := .Values.serviceMesh.gateway.tls.enabled }}
+apiVersion: projectcontour.io/v1
+kind: HTTPProxy
+metadata:
+  name: {{ include "eric-lcm-package-repository-py.name" . }}-routes
+  labels: {{ include "eric-lcm-package-repository-py.labels" . | nindent 4 }}
+  annotations: {{- include "eric-lcm-package-repository-py.iccrHttpProxyAnnotations" . | nindent 4 }}
+spec:
+  routes:
+  {{- range .Values.serviceMesh.ingress.matchPrefix }}
+    - conditions:
+        - prefix: {{ . | quote }}
+      services:
+      {{- if $.Values.serviceMesh.enabled }}
+        - name: {{ $.Values.serviceMesh.gateway.serviceName | quote}}
+          port: {{ $.Values.serviceMesh.gateway.port }}
+          {{- if $gwTLS }}
+          protocol: tls
+          validation:
+            caSecret: {{ $.Values.serviceMesh.gateway.tls.rootCaSecret }}
+            subjectName: {{ $.Values.serviceMesh.gateway.tls.subjectName }}
+          {{- end }}
+      {{- else }}
+        - name: {{ include "eric-lcm-package-repository-py.name" . }}
+          port: {{ $.Values.service.port }}
+      {{- end }}
+          timeoutPolicy:
+            response: 30s
+  {{- end }}
+     
+{{- else if .Values.ingress.enabled -}}
+{{- fail "ingress.createRoutes must be true when ingress is enabled" }}
+{{- end -}}

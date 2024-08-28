@@ -1,0 +1,141 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+modelVersion: 2.0
+
+properties:
+      # Microservice docker image name
+    - docker-image-name: eric-lcm-package-repository-py
+      # Microservice docker image title
+    - docker-image-title: 'Python\ Package\ Repository'
+      # Microservice service name
+    - service-name: 'Python Package Repository'
+      # Helm chart destination directory
+    - eridoc-config: "config/doc/eridoc_config.yaml"
+      # Product extended name in JIRA
+    - jira-component-name: "MEE"
+      # Gerrit repository URL
+    - gerrit-url: "https://gerrit.ericsson.se/plugins/gitiles/MXE/mlops-3pps/pypiserver/"
+      # GIT clone URL
+    - git-clone-url: https://gerrit.ericsson.se/MXE/mlops-3pps/pypiserver-build.git
+      # Artifact Repositories
+    - arm_repo_path: https://arm.seli.gic.ericsson.se/artifactory
+      # Helm Repo Server location
+    - image-released-repo-name: proj-mlops-released-docker-global/proj-mlops-released
+      # Docker Repo Location
+    - image-registry-path: armdocker.rnd.ericsson.se/proj-mlops
+      # Docker Drop Repo Full Path
+      
+    - image-drop-repopath: ${image-registry-path}-drop
+
+      # Docker Drop Image full name
+    - image-full-name: ${image-drop-repopath}/${docker-image-name}
+      # Docker Released Image full name
+    - image-released-repopath: ${image-registry-path}-released
+    # License Agreement JSON file name
+    - license-agreement-file-name: config/fossa/license-agreement.json
+    - license-agreement-file-rpm-name: config/fossa/license-agreement-rpm.json
+    - license-agreement-file-pypiserver-name: config/fossa/license-agreement-pypiserver.json
+
+    
+    ## tool versions
+    # Base OS version
+    - common-base-os-version: 6.17.0-11
+
+    # Product numbers
+    # APR product Number
+    - apr-product-number: APR201939
+    # Source Product Number
+    - source-product-number: CAV1011051
+
+    - pypiserver-path: .bob/3pp/pypiserver
+    
+    - helm-values-file: "ci/values/lcm-packagae-reposistory-py-values.yaml"
+    # Product numbers
+      # Image product Numbers
+    - pypiserver-image-product-number: CXU1012163
+    - pypiserver-init-loader-image-product-number: CXU1012164
+
+    # Depedencies
+    - pypiserver-dependency-file-name: config/fossa/dependencies.pypiserver.yaml
+
+    # Microservice helm chart name
+    - helm-chart-name: eric-lcm-package-repository-py
+    - helm-chart-dir: "build/charts"
+    - helm-chart-repo-server-path: ${arm_repo_path}/proj-mlops
+      # Helm Drop repo full URL
+    - helm-chart-drop-repopath: ${helm-chart-repo-server-path}-drop-helm
+      # Helm Released repo full URL
+    - helm-chart-released-repopath: ${helm-chart-repo-server-path}-released-helm
+      # Documentation Drop repo full URL
+    - helm-chart-localpath: ${helm-chart-dir}/${helm-chart-name}-${var.helm-version}.tgz
+
+    # Documentation Repo Path location
+    - documentation-drop-repo: ${helm-chart-repo-server-path}-docs-dev-generic-local
+    - documentation-drop-path: ${documentation-drop-repo}/${helm-chart-name}/drop
+
+    #CRD
+    - helm-crd-chart-name: eric-lcm-package-repository-py-crd
+    - helm-checker-crd-report-path: build/checker-reports/charts/crd
+    - helm-product-number: CXD101723
+    # Stdout Redirect Details
+    - stdout-redirect-version: 1.38.0
+    - stdout-redirect-package-url: https://arm.seli.gic.ericsson.se/artifactory/proj-adp-log-release/com/ericsson/bss/adp/log/stdout-redirect/${stdout-redirect-version}/eric-log-libstdout-redirect-golang-cxa30176-${stdout-redirect-version}.x86_64.tar
+
+    # Common Fragments File Path - pm-metrics, service-ports, characteristics report jsons
+    - fragments-file-path: docs/fragments/
+
+    #Interfaces fragment
+    - interface-fragment-file-name: interfaces.json
+    - interface-fragment-path: charts/${helm-chart-name}/models
+
+    # Security Attributes JSON destination file name
+    - security-attributes-file-name: ${helm-chart-name}_security_attributes.json
+    - security-attributes-dest-file-name: build/${security-attributes-file-name}
+
+    #Product Structure File 
+    - product-structure-file: config/plms/product_structure.yaml
+
+    # Dependencies File Path
+    - dependency_file_path: config/fossa/
+
+    # Marketplace Release Upload Config File
+    - marketplace_release_upload_config_file: docs/config/marketplace_release_upload_config.yaml
+    
+    #SWCA
+    - ca-repo-name: mxe-pypiserver-build-swca
+    - ca-policy-name: MXE_MLOPS
+
+    # VA Pipeline parameters and configurations
+    - defensics-service-url: "http://eric-lcm-package-repository-py:8080"
+    
+    # The tenable pod selector is used to select the pod based on the selector condition mentioned here. For multiple pods the selectors are delimited by semi-colon(;)
+    - tenable-pod-selector: 'app.kubernetes.io/name=eric-lcm-package-repository-py' 
+    - hadolint-scan-files: 'images/pypiserver/Dockerfile;images/init-load-image/Dockerfile'
+    - zap-scan: false
+    - nmap-config: config/va/nmap_config.yaml
+    - va-config-path: config/va
+
+    - pre_req_script_path: ci/scripts/pre-req/
+    - issu_applicable: false    
+
+var:
+  - helm-version
+
+## TLS Configuration
+tls:
+  - name: pypi-lcm # This will create an endpoint with the name pypi-lcm.<vclustername>.<hostclustername>.rnd.gic.ericsson.se
+    secret-name: lcm-package-repository-py-tls # Name of the kubernetes secret that contains the TLS certificate and key. A k8s manifest (lcm-package-repository-py-tls.yaml) will be generated in the root folder.

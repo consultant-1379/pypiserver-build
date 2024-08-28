@@ -1,0 +1,134 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+modelVersion: 2.0
+docker-images:
+    - adp-release-auto: armdocker.rnd.ericsson.se/proj-adp-cicd-drop/bob-adp-release-auto:${env.RELEASE_AUTO_TAG}
+
+import:
+    common: common-properties.yaml
+
+properties:
+    - product-structure-file-path: config/plms/product_structure.yaml
+    - helm-artifact-path: ${common.helm-chart-released-repopath}/${common.helm-chart-name}/${common.helm-chart-name}-${var.released-version}.tgz
+    - image-manifest-path: ${common.arm_repo_path}/${common.image-released-repo-name}/${common.docker-image-name}/${env.RELEASE_CANDIDATE}/manifest.json
+    - db-init-image-manifest-path: ${common.arm_repo_path}/${common.image-released-repo-name}/${common.docker-image-name}-db-init/${env.RELEASE_CANDIDATE}/manifest.json
+    - test-image-manifest-path: ${common.arm_repo_path}/${common.image-released-repo-name}/${common.docker-image-name}-test/${env.RELEASE_CANDIDATE}/manifest.json
+
+env:
+    - DRY_RUN (default=false)
+    - RELEASE_AUTO_TAG (default=latest)
+    - RELEASE_CANDIDATE
+    # the ARM artifactory credentials
+    - SELI_ARTIFACTORY_REPO_API_KEY
+    - MUNIN_TOKEN
+    - SERVER (default=prod)
+    - ERIDOC_USERNAME (default=mxecifunc)
+    - ERIDOC_PASSWORD
+    - EVMS_USERNAME (default=mxecifunc)
+    - EVMS_API_KEY
+    - EVMS_REFRESH_TOKEN
+
+var:
+    - sha256-helm
+    - sha256-image
+    - sha256-initcontainer
+    - sha256-test-image
+    - cbos-version
+    - has-dependencies-been-modified
+    - semver
+    - release-commithash
+    - released-version
+
+rules:
+    
+    # Check if any PLM or dependency changes
+    dependencies:
+        - task: check-has-changed
+          cmd:
+              - if [ -z "$(git diff --name-status HEAD~ | grep 'config\|plms')" ]; then
+                echo "NO modifications have been made dependencies.";
+                echo false > .bob/var.has-dependencies-been-modified;
+                else
+                echo "There has been modifications made to the dependencies.";
+                echo true > .bob/var.has-dependencies-been-modified;
+                fi
+              - test ${var.has-dependencies-been-modified} == true
+
+    check-foss-in-mimer-pypiserver:
+        - task: compare-foss-and-mimer
+          condition: dependencies:check-has-changed
+          docker-image: adp-release-auto
+          docker-envs:
+              - MUNIN_TOKEN
+          cmd: munin search-foss
+              -s ${env.SERVER}
+              -t ${env.MUNIN_TOKEN}
+              -d ${common.pypiserver-dependency-file-name}
+              -o build
+
+    # Pre-Release
+    pre-release:
+        - task: semvar-generate
+          condition: dependencies:check-has-changed
+          docker-image: adp-release-auto
+          cmd: cat .bob/var.version | cut -d '-' -f 1 > .bob/var.semver
+        - task: get-cbos-version
+          condition: dependencies:check-has-changed
+          cmd: echo ${common.common-base-os-version} | cut -d '-' -f 1 > .bob/var.cbos-version
+        - task: document-draft-list-prepare
+          condition: dependencies:check-has-changed
+          docker-image: adp-release-auto
+          docker-envs:
+              - ERIDOC_USERNAME
+              - ERIDOC_PASSWORD
+          cmd:
+              - munin-doc search
+                -v ${var.semver}
+                -c ${product-structure-file-path}
+                --dry-run ${env.DRY_RUN}
+                --set CBOS_VERSION=${var.cbos-version}
+                --set STDOUT_REDIRECT_VERSION=${common.stdout-redirect-version}
+        - task: mimer-versions-create
+          condition: dependencies:check-has-changed
+          docker-image: adp-release-auto
+          docker-envs:
+              - MUNIN_TOKEN
+          cmd: munin create-versions
+              -s ${env.SERVER}
+              -t ${env.MUNIN_TOKEN}
+              -c ${product-structure-file-path}
+              -v ${var.semver}
+              --dry-run ${env.DRY_RUN}
+              --debug
+              --skip-bookmark-creation
+              --set CBOS_VERSION=${var.cbos-version}
+              --set STDOUT_REDIRECT_VERSION=${common.stdout-redirect-version}
+        - task: evms-pre-register
+          docker-image: adp-release-auto
+          condition: dependencies:check-has-changed
+          docker-envs:
+              - EVMS_API_KEY
+          cmd: dependencies pre-register
+              --evms
+              --evms-user=${env.EVMS_USERNAME}
+              --evms-product-name '${common.service-name}'
+              --evms-product-version ${var.semver}
+              --dependencies ${common.pypiserver-dependency-file-name}
+              --dry-run false
+              --debug
+              --enable-auto-answering       
+              

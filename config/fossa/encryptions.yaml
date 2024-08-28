@@ -1,0 +1,144 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+modelVersion: 2.0
+uses_encryption:
+    # Encryptions included through CBO, hence CBO product number is specified
+    - product_number: CXC 201 2032
+      encryptions:
+          # Explain how the encryption is used
+          - usage: >
+                Python Packagre Repository service for hosting, distribution, and management of Python packages.
+            # Encryption Purpose (possible values: 'Data confidentiality, OAM only', 'Data confidentiality, not only OAM', 'Other than data confidentiality')
+            purpose: "Data confidentiality, OAM only"
+            # Encryption Protocols
+            protocols:
+            - protocol: HTTPS
+              usage: "Provided for microservices and applications"
+              standard: "IETF"
+            - protocol: Ipsec
+              usage: "Provided for microservices and applications"
+              standard: "IETF"
+            - protocol: MIKEY
+              usage: "Provided for microservices and applications"
+              standard: "IETF"
+            - protocol: SSL
+              usage: "Provided for microservices and applications"
+              standard: "IETF"
+            - protocol: TLS 1.2
+              usage: "Provided for microservices and applications"
+              standard: "IETF"
+            - protocol: TLS 1.3
+              usage: "Provided for microservices and applications"
+              standard: "IETF"
+            - protocol: WEP
+              usage: "Provided for microservices and applications"
+              standard: "IEEE"
+            - protocol: WPA
+              usage: "Provided for microservices and applications"
+              standard: "IEEE"
+            # Cryptographic Algorithms
+            crypto_algorithms:
+                # Algorithm Name (for full list see Munin documentation).
+                # Check in tlsutil.py for the enabled list of ciphers.
+                # Only the highest key length shall be listed
+                # Check how the mapping should be made, e.g.:
+                #    https://cheapsslsecurity.com/p/everything-you-need-to-know-about-an-ssl-cipher-cipher-lists/
+                #
+                # Key length: only mention same algorithm ones with the longest key
+                # Encryption Mode: specify the encryption mode, where applicable
+            - name: AES
+              key_length: 256
+              encryption_mode: CBC
+            - name: AES
+              key_length: 256
+              encryption_mode: ECB
+            - name: AES
+              key_length: 256
+              encryption_mode: CFB
+            - name: AES
+              key_length: 256
+              encryption_mode: GCM
+            - name: AES
+              key_length: 256
+              encryption_mode: CCM
+            - name: AES
+              key_length: 256
+              encryption_mode: CTR
+            - name: AES
+              key_length: 256
+              encryption_mode: XTS
+            - name: 3DES
+              key_length: 168
+            - name: 3-Way
+              key_length: 96
+            - name: Anubis
+              key_length: 320
+            - name: Blowfish
+              key_length: 448
+            - name: Camellia
+              key_length: 256
+            - name: CAST5
+              key_length: 128
+            - name: CAST6
+              key_length: 256
+            - name: DES
+              key_length: 56
+            - name: FCrypt
+              key_length: 56
+            - name: GOST
+              key_length: 256
+            - name: GOST28147-89
+              key_length: 256
+            - name: HMAC-MD5
+              key_length: 512
+            - name: HMAC-SHA1
+              key_length: 512
+            - name: HMAC-SHA2
+              key_length: 512
+            - name: IDEA
+              key_length: 128
+            - name: Khazad
+              key_length: 128
+            - name: RC2
+              key_length: 1024
+            - name: RC4
+              key_length: 2048
+            - name: RC5
+              key_length: 128
+            - name: RC6
+              key_length: 256
+            - name: SAFER
+              key_length: 128
+            - name: Serpent
+              key_length: 256
+            - name: TEA
+              key_length: 128
+            - name: tnepres
+              key_length: 256
+            - name: Twofish
+              key_length: 256
+            - name: XTEA
+              key_length: 128
+            - name: DSA
+              key_length: 4096
+            - name: ElGamal
+              key_length: 4096
+            - name: RSA
+              key_length: 4096
+            - name: DH
+              key_length: 2048
+            - name: ECDSA

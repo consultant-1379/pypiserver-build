@@ -1,0 +1,48 @@
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### Eclipse
+.settings
+.classpath
+.project
+.factorypath
+.mvn
+
+### VS Code ###
+.vscode/
+.metals/
+
+### BOB Temporary Files/Folders ###
+.bob.env
+.bob/
+.bob*/
+k8s-logs/
+build
+mlops-utils/
+temp
+*.log
+?/
+
+
+#license check 
+*.tmp
+
+### Docs
+**/.generated/
+/.metadata/
+
+## Robot
+*.pyc
+test-reports/
+
+ci/logshipper-integration/python-package-repo-integ/charts/*
+ci/logshipper-integration/python-package-repo-integ/Chart.lock
+ci/logshipper-integration/python-package-repo-integ/Chart.yaml
+ci/values/lcm-packagae-reposistory-py-values.yaml*
+
+eric-lcm-package-repository-py.html
+eric-lcm-package-repository-py.json
+eric-lcm-package-repository-py.xlsx

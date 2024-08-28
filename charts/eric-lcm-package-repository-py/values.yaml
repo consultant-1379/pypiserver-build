@@ -1,0 +1,520 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+
+# Default values for eric-lcm-package-repository-py.
+
+# Override the service name.
+nameOverride: ""
+
+# Override fully qualified service name.
+fullnameOverride: ""
+
+# Global parameters shall be defined in the top level values.yaml
+# They are kept here for indicating which are supported and their default values.
+#
+#global:
+#  # Node selectors for the service pods.
+#  # If global or local node selectors are set, they are merged.
+#  nodeSelector: {}
+
+#  # Global image registry pull secret. It can be overridden locally by imageCredentials.pullSecret.
+#  pullSecret:
+
+#  registry:
+#    # Global Docker registry url.
+#    url:
+#    # Global repository path.
+#    repoPath:
+#    imagePullPolicy:
+
+#  # Timezone setting.
+#  timezone: UTC
+
+#  # Global setting for IP family. The value can be either IPv4 or IPv6.
+#  internalIPFamily:
+
+#  security:
+#    # Enables/Disables tls intra-cluster communication. Requires SIP-TLS.
+#    tls:
+#      enabled: true
+#    # policyBinding and policyReferenceMap fields are only valid if Pod Security Policy (PSP) is enabled in the cluster.
+#    policyBinding:
+#      create: true
+#    policyReferenceMap:
+#      default-restricted-security-policy:
+
+#  metrics:
+#    # PM Server service name. It must match the deployed service name.
+#    serviceReference: eric-pm-server
+
+#  ingress:
+#    # Ingress Controller CR deployment name
+#    serviceReference: eric-tm-ingress-controller-cr
+#    # Ingress Controller ingress class
+#    ingressClass:
+
+# Number of Pods to deploy in Kubernetes cluster.
+replicaCount: 1
+
+# Create HorizontalPodAutoscaler object.
+autoScaling:
+  # Enables/Disables Kubernetes pod auto scaling.
+  enabled: false
+  # Conditional, if autoScaling is enabled: Autoscaling minimum replica count
+  minReplicas: 1
+  # Conditional, if autoScaling is enabled: Autoscaling maximum replica count
+  maxReplicas: 10
+  # Conditional, if autoScaling is enabled: Threshold CPU usage
+  cpuThreshold: 80
+
+# Update strategy for service deployment.
+updateStrategy:
+  # Define the update strategy type.
+  type: RollingUpdate
+  rollingUpdate:
+    # The amount (number or percentage) of pods that can be unavailable during the update process.
+    maxUnavailable: "25%"
+    # The amount (number or percentage) of pods that can be created above the desired amount of pods during an update.
+    maxSurge: "25%"
+  brAgent:
+    type: RollingUpdate
+    rollingUpdate:
+      # The amount (number or percentage) of pods that can be unavailable during the update process.
+      maxUnavailable: "25%"
+      # The amount (number or percentage) of pods that can be created above the desired amount of pods during an update.
+      maxSurge: "25%"
+
+podDisruptionBudget:
+  # Minimum number/percentage of Pods that must remain available during the planned disruption.
+  # Value can be expressed as an integer or as a percentage. When specified as a percentage of the Pods,
+  # if it does not map to an exact number, Kubernetes rounds up to the nearest integer.
+  # minAvailable: 2 # example value for 2 pods defined as integer
+  minAvailable: "50%"
+
+  # Maximum number/percentage of Pods that can be unavailable during the planned disruption.
+  # Value can be expressed as an integer or as a percentage. When specified as a percentage of the Pods,
+  # if it does not map to an exact number, Kubernetes rounds up to the nearest integer.
+  # if maxUnavailable is set, the value for podDisruptionBudget.minAvailable is ignored.
+  # maxUnavailable: 2 # example value for 2 pods defined as integer
+  # maxUnavailable: "50%" # example value for 50% of pods defined as percentage
+  # maxUnavailable:
+
+
+# Additional log level for custom log
+extraLogLevel: [ ]
+# - com.ericsson.custom: info
+
+# Allow additional labels to be attached to every resource created within the service
+labels: { }
+
+# Allow additional annotations to be attached to every resource created within the service
+annotations: { }
+#  ericsson.com/my-info-key: "my-info-value"
+#  ericsson.com/more-key: "more-value"
+
+
+service:
+  port: 8080
+  endpoints:
+    ericLcmPackageRepositoryPy:
+      tls:
+        # Client certificate verification for mTLS.
+        #   - Required: client certificate must be provided. Only HTTPS is allowed.
+        #   - Optional: client certificate is not mandatory.
+        verifyClientCertificate: required
+    metrics:
+      # Enables/disables metrics endpoint. If false, metrics will not be scraped.
+      enabled: false
+
+ingress:
+  # If true, an ingress routes and virtual host will be created for this api
+  enabled: true
+  useHTTPProxy: true
+  # Ingress Controller CR deployment name
+  serviceReference: eric-tm-ingress-controller-cr
+  createRoutes: true
+  # Conditional, if ingress is enabled: The ingress host fully qualified domain name (FQDN)
+  hostname:
+  # Names of the certificates created via ADP Certificate Management
+  certificates:
+    # Name of both server-side asymmetric key and certificate
+    # If not provided, default is eric-lcm-package-repository-py-ingress-http-server
+    asymmetricKeyCertificateName:
+    # Name of the list of trusted client CAs
+    # If not provided, default is eric-lcm-package-repository-py-ingress-http-server
+    trustedCertificateListName:
+  tls:
+    # Enables/Disables mTLS for external traffic
+    enabled: true
+    secretName: 
+    # Client certificate verification for mTLS.
+    #   - Required: client certificate must be provided. Only HTTPS is allowed.
+    # Optional client certificate verification is not supported.
+    # Set it to empty or null to disable client certificate verification.
+    verifyClientCertificate: required
+  # Ingress class name
+  ingressClass: eric-tm-ingress-controller-cr
+  # Ingress additional annotations
+  annotations: {}
+  # required to set up network policy when Service mesh is disabled and routing happens directly
+  # from ingress controller to service
+  controller:
+    serviceName: eric-tm-ingress-controller-cr
+    # namespace should be set only if ingress controller is not running in the Release namespace
+    # this field is used to set the namespace selector in network policy
+    namespace:
+
+# Graceful shutdown uses a timeout which provides a grace period during which existing requests will be allowed
+# to complete but no new requests will be permitted.  The value zero indicates delete immediately.
+# If this value is null, the default grace period will be used instead. Defaults to 30 seconds.
+terminationGracePeriodSeconds: 30
+
+#  network bandwidth and basic traffic shaping parameters
+bandwidth:
+  pypiserver:
+    maxEgressRate:
+
+# Generation of role bindings for admission control in OpenShift environment - DR-D1123-134
+securityPolicy:
+  bragent:
+    rolename: "eric-lcm-package-repository-py-role"
+
+# Configuration of supplementalGroups IDs
+podSecurityContext:
+  supplementalGroups: null
+
+networkPolicy:
+  # Enable or disable Network Policies.
+  enabled: false
+  services:
+    - labels:
+        app.kubernetes.io/name: eric-tm-ingress-controller-cr
+    - labels:
+        app.kubernetes.io/name: eric-lcm-package-repository-py-gateway
+  # egress isolation settings
+  egress:
+#    # cidr range allowed to communicate
+#    - cidr: 172.17.0.0/32
+#      # ports selection defined per protocol.
+#      ports:
+#      - protocol: TCP
+#        port: 1234
+#      - protocol: UDP
+#        port: 2345
+
+# Node selectors for the service pod.
+nodeSelector:
+  pypiserver: {}
+  brAgent: {}
+
+# List of topology spread constraints that can be used to control how Pods are spread across your
+# cluster among failure domains such as regions, zones, nodes, and other user-defined topology domains.
+topologySpreadConstraints: 
+  pypiserver: []
+  # Describes the degree to which Pods may be unevenly distributed.
+  #- maxSkew:
+    # Topology key to be used for the spread constrain.
+    #topologyKey:
+    # Indicates how to deal with a Pod if it doesn't satisfy the spread constraint.
+    # DoNotSchedule tells the scheduler not to schedule it.
+    # ScheduleAnyway tells the scheduler to still schedule it while prioritizing nodes that minimize the skew.
+    #whenUnsatisfiable:
+
+tolerations:
+  pypiserver:
+    - key: node.kubernetes.io/not-ready
+      operator: Exists
+      effect: NoExecute
+      tolerationSeconds: 0
+    - key: node.kubernetes.io/unreachable
+      operator: Exists
+      effect: NoExecute
+      tolerationSeconds: 0
+  bragent:
+    - key: node.kubernetes.io/not-ready
+      operator: Exists
+      effect: NoExecute
+      tolerationSeconds: 0
+    - key: node.kubernetes.io/unreachable
+      operator: Exists
+      effect: NoExecute
+      tolerationSeconds: 0    
+
+affinity:
+  # Determines whether Pods are required (hard) or only preferred (soft) to run on different nodes.
+  # podAntiAffinity can be hard or soft. The default is soft.
+  podAntiAffinity: "soft"
+  topologyKey: "kubernetes.io/hostname"
+
+podPriority:
+  # Priority class name for the service Pod. Priority classes are used to determine the priority of Pods when scheduling them on nodes.
+  ericLcmPackageRepositoryPy:
+    priorityClassName: ""
+  brAgent:
+    priorityClassName: ""
+
+imageCredentials:
+  # Common repository path for all containers.
+  repoPath:
+  registry:
+      imagePullPolicy: # overrides global image pull policy
+      url: # overrides registry url from global & eric-product-info.yaml
+  # Image registry pull secret.
+  pullSecret:
+  ericLcmPackageRepositoryPy:
+    registry:
+      # Specific Docker registry url for a service.
+      url:
+      # Specific Image pull policy for a service.
+      imagePullPolicy: # overrides global image pull policy
+      # Specific repository path for a service.
+      repoPath:
+  pypiinit:
+    # optional init container to copy all pip wheels into pypiserver from external image
+    enabled: false
+    image:
+      name:
+      tag: 
+    registry:
+      # Specific Docker registry url for a service.
+      url: 
+      # Specific Image pull policy for a service.
+      imagePullPolicy: # overrides global image pull policy
+      # Specific repository path for a service.
+      repoPath: 
+
+persistence:
+  persistentVolumeClaim:
+    annotations: {}
+    accessModes:
+      - ReadWriteOnce
+    storageClassName: null
+    size: "10Gi"
+
+pypiserver:
+  extraArgs: 
+      - --disable-fallback
+      - --log-file=/log/pypiserver.log
+
+auth:
+  ## comma-separated list of (case-insensitive) actions to authenticate
+  ## Use '.' or '' for empty. Requires to have set the password (option below).
+  ## Available actions are update, download and list
+  actions: ''
+  ## Map of username / encoded passwords that will be put to the htpasswd file
+  ## use `htpasswd -n -b username password` to generate them
+  credentials: {}
+
+serviceMesh:
+  # Enable service to use service mesh (inject sidecars and add SM configuration)
+  # Will only take effect in case service mesh is globally enabled .Values.global.serviceMesh.enabled should also be set to true
+  enabled: true
+  # useful only to incases where case global mtls mode 
+  # configuration needs to be overridden by using Service specific peer authentication
+  tls:
+    enabled: false 
+    mode: ISTIO_MUTUAL
+
+  # Service name and port of the service mesh gateway
+  gateway:
+      serviceName: eric-lcm-package-repository-py-ingress-gateway
+      port: 80
+      tls:
+        enabled: false
+        rootCaSecret:
+        subjectName:
+  ingress:
+    enabled: true
+    # GW, host and pathPrefix configuration for VirtualService
+    # gwName is name of the Ingress Gateway Custom Resource
+    gwName: eric-lcm-package-repository-py-gateway 
+    host: "*"
+    matchPrefix:
+    - /pypi
+    - /simple
+    - /packages 
+  # Retry settings for VirtualService  
+  settingsVS:
+    enabled: true
+    overallTimeout: 30s
+    
+  egress:
+    enabled: false
+    ericlcmpackagerepositorypy:
+      enabled: false
+    ca:
+      genSecretName: eric-sec-sip-tls-trusted-root-cert
+      caCertsPath: /etc/istio/egress-ca-certs/
+
+resources:
+  ericLcmPackageRepositoryPy:
+    limits:
+      # CPU resource limit for the service container.
+      # The container CPU usage may be throttled to this value.
+      cpu: 2000m
+      # Memory resource limit for the service container.
+      # The container will be killed with an out-of-memory error if it goes above this limit. It must not be empty.
+      memory: "2Gi"
+      # Ephemeral storage limit capacity for the service container.
+      ephemeral-storage: ""
+    requests:
+      # CPU resource request for the service container.
+      cpu: 1000m
+      # Memory resource request for the service container.
+      memory: "512Mi"
+      # Ephemeral storage capacity request for the service container.
+      ephemeral-storage: ""
+  init-load-packages:
+    limits:
+      # CPU resource limit for the service container.
+      # The container CPU usage may be throttled to this value.
+      cpu: 200m
+      # Memory resource limit for the service container.
+      # The container will be killed with an out-of-memory error if it goes above this limit. It must not be empty.
+      memory: "512Mi"
+      # Ephemeral storage limit capacity for the service container.
+      ephemeral-storage: ""
+    requests:
+      # CPU resource request for the service container.
+      cpu: 100m
+      # Memory resource request for the service container.
+      memory: "256Mi"  
+      # Ephemeral storage capacity request for the service container.
+      ephemeral-storage: ""  
+  logshipper:
+      limits:
+          memory: "50Mi"
+          cpu: "40m"
+          ephemeral-storage: # Experimental feature. Specifying incorrect ephemeral-storage may cause unexpected pod evictions. See User Guide for more details.
+      requests:
+          memory: "25Mi"
+          cpu: "25m"
+          ephemeral-storage: # Experimental feature. Specifying incorrect ephemeral-storage may cause unexpected pod evictions. See User Guide for more details.
+  brAgent:
+    requests:
+      memory: "128Mi"
+      cpu: "300m"
+      ephemeral-storage: "10Gi"
+    limits:
+      memory: "1280Mi"
+      cpu: "1500m"
+      ephemeral-storage: "20Gi"
+    jvm:
+      initialMemoryAllocationPercentage: 50
+      smallMemoryAllocationMaxPercentage: 70
+      largeMemoryAllocationMaxPercentage: 50    
+
+
+probes:
+  ericLcmPackageRepositoryPy:
+    livenessProbe:
+      # Minimum consecutive failures for the probe to be considered failed after having succeeded.
+      failureThreshold: 3
+      # Number of seconds after the container has started before liveness probes are initiated.
+      initialDelaySeconds: 10
+      # How often (in seconds) to perform the probe.
+      periodSeconds: 10
+      # Minimum consecutive successes for the probe to be considered successful after having failed.
+      successThreshold: 1
+      # Number of seconds after which the probe times out.
+      timeoutSeconds: 1
+    readinessProbe:
+      # Minimum consecutive failures for the probe to be considered failed after having succeeded.
+      failureThreshold: 3
+      # Number of seconds after the container has started before liveness probes are initiated.
+      initialDelaySeconds: 10
+      # How often (in seconds) to perform the probe.
+      periodSeconds: 5
+      # Minimum consecutive successes for the probe to be considered successful after having failed.
+      successThreshold: 1
+      # Number of seconds after which the probe times out.
+      timeoutSeconds: 1
+  brAgent:
+    startupProbe:
+      initialDelaySeconds: 0
+      periodSeconds: 5
+      timeoutSeconds: 5
+      successThreshold: 1
+      failureThreshold: 60
+    livenessProbe:
+      initialDelaySeconds: 0
+      periodSeconds: 10
+      timeoutSeconds: 30
+      successThreshold: 1
+      failureThreshold: 5
+    readinessProbe:
+      initialDelaySeconds: 0
+      periodSeconds: 10
+      timeoutSeconds: 5
+      successThreshold: 1
+      failureThreshold: 5
+
+
+appArmorProfile:
+  # AppArmor profile type for the service container.
+  type:
+  # Localhost path to the AppArmor profile for the service container.
+  # Should only be set if appArmorProfile.type is set to localhost.
+  localhostProfile:
+
+seccompProfile:
+  # Seccomp profile type for the service container.
+  type:
+  # Localhost path to the seccomp profile for the service container.
+  # Should only be set if seccompProfile.type is set to Localhost.
+  localhostProfile:
+
+logShipper:
+  logLevel: "info"
+  runAndExit: false
+  stdoutRedirect:
+    size: 10
+    rotate: 10
+  storage:
+    path: "/logs"
+    size: "128Mi"
+    medium: "Memory"
+  input:
+    files:
+      - enabled: true
+        paths:
+          - "pypiserver.log"
+        multilines:
+          - "go"
+          - "python"
+  output:
+    logTransformer:
+      host: eric-log-transformer
+
+# Integrate with Backup and Restore Orchestor
+brAgent:
+  enabled: false
+  brLabelValue: PythonPackageRepositoryBRAgent
+  backupTypeList:
+  # BRA rest api port
+  restPort: 8081
+  logLevel: info
+
+ephemeralStorage:
+  pypi_server_logs:
+    size: 1Gi
+  usr_tmp:
+    size: 1Gi
+  backup_data:
+    size: 5Gi      
+  restore_data:
+    size: 5Gi

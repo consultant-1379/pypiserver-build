@@ -1,0 +1,2585 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+modelVersion: '3.0'
+2pp_dependencies:
+- name: Common Base OS Base Image
+  version: 6.17.0
+  abc_number: CXC2012032
+  evms:
+    register: 'yes'
+  category: ''
+- name: Common Base OS Repository
+  version: 6.17.0
+  abc_number: CXC2012031
+  evms:
+    register: 'yes'
+  category: ''
+- name: Stdout Redirect
+  version: 1.38.0
+  abc_number: CXA30176
+  evms:
+    register: 'yes'
+  category: ''
+dependencies:
+- ID: bcrypt+4.0.1
+  additional_info:
+    fossa-attribution:
+      Description: "bcrypt======.. image:: https://img.shields.io/pypi/v/bcrypt.svg
+        \   :target: https://pypi.org/project/bcrypt/    :alt: Latest Version.. image::
+        https://github.com/pyca/bcrypt/workflows/CI/badge.svg?branch=main    :target:
+        https://github.com/pyca/bcrypt/actions?query=workflow%3ACI+branch%3AmainAcceptable
+        password hashing for your software and your servers (but you shouldreally
+        use argon2id or scrypt)Installation============To install bcrypt, simply:..
+        code:: bash    $ pip install bcryptNote that bcrypt should build very easily
+        on Linux provided you have a Ccompiler and a Rust compiler (the minimum supported
+        Rust version is 1.56.0).For Debian and Ubuntu, the following command will
+        ensure that the required dependencies are installed:.. code:: bash    $ sudo
+        apt-get install build-essential cargoFor Fedora and RHEL-derivatives, the
+        following command will ensure that the required dependencies are installed:..
+        code:: bash    $ sudo yum install gcc cargoFor Alpine, the following command
+        will ensure that the required dependencies are installed:.. code:: bash    $
+        apk add --update musl-dev gcc cargoAlternatives============While bcrypt remains
+        an acceptable choice for password storage, depending on your specific use
+        case you may also want to consider using scrypt (either via `standard library`_
+        or `cryptography`_) or argon2id via `argon2_cffi`_.Changelog=========4.0.1-----*
+        We now build PyPy ``manylinux`` wheels.* Fixed a bug where passing an invalid
+        ``salt`` to ``checkpw`` could result in  a ``pyo3_runtime.PanicException``.
+        It now correctly raises a ``ValueError``.4.0.0-----* ``bcrypt`` is now implemented
+        in Rust. Users building from source will need  to have a Rust compiler available.
+        Nothing will change for users downloading  wheels.* We no longer ship ``manylinux2010``
+        wheels. Users should upgrade to the latest  ``pip`` to ensure this doesn\u2019t
+        cause issues downloading wheels on their  platform. We now ship ``manylinux_2_28``
+        wheels for users on new enough platforms.* ``NUL`` bytes are now allowed in
+        inputs.3.2.2-----* Fixed packaging of ``py.typed`` files in wheels so that
+        ``mypy`` works.3.2.1-----* Added support for compilation on z/OS* The next
+        release of ``bcrypt`` with be 4.0 and it will require Rust at  compile time,
+        for users building from source. There will be no additional  requirement for
+        users who are installing from wheels. Users on most  platforms will be able
+        to obtain a wheel by making sure they have an up to  date ``pip``. The minimum
+        supported Rust version will be 1.56.0.* This will be the final release for
+        which we ship ``manylinux2010`` wheels.  Going forward the minimum supported
+        manylinux ABI for our wheels will be  ``manylinux2014``. The vast majority
+        of users will continue to receive  ``manylinux`` wheels provided they have
+        an up to date ``pip``.3.2.0-----* Added typehints for library functions.*
+        Dropped support for Python versions less than 3.6 (2.7, 3.4, 3.5).* Shipped
+        ``abi3`` Windows wheels (requires pip >= 20).3.1.7-----* Set a ``setuptools``
+        lower bound for PEP517 wheel building.* We no longer distribute 32-bit ``manylinux1``
+        wheels. Continuing to produce  them was a maintenance burden.3.1.6-----* Added
+        support for compilation on Haiku.3.1.5-----* Added support for compilation
+        on AIX.* Dropped Python 2.6 and 3.3 support.* Switched to using ``abi3`` wheels
+        for Python 3. If you are not getting a  wheel on a compatible platform please
+        upgrade your ``pip`` version.3.1.4-----* Fixed compilation with mingw and
+        on illumos.3.1.3-----* Fixed a compilation issue on Solaris.* Added a warning
+        when using too few rounds with ``kdf``.3.1.2-----* Fixed a compile issue affecting
+        big endian platforms.* Fixed invalid escape sequence warnings on Python 3.6.*
+        Fixed building in non-UTF8 environments on Python 2.3.1.1-----* Resolved a
+        ``UserWarning`` when used with ``cffi`` 1.8.3.3.1.0-----* Added support for
+        ``checkpw``, a convenience method for verifying a password.* Ensure that you
+        get a ``$2y$`` hash when you input a ``$2y$`` salt.* Fixed a regression where
+        ``$2a`` hashes were vulnerable to a wraparound bug.* Fixed compilation under
+        Alpine Linux.3.0.0-----* Switched the C backend to code obtained from the
+        OpenBSD project rather than  openwall.* Added support for ``bcrypt_pbkdf``
+        via the ``kdf`` function.2.0.0-----* Added support for an adjustible prefix
+        when calling ``gensalt``.* Switched to CFFI 1.0+Usage-----Password Hashing~~~~~~~~~~~~~~~~Hashing
+        and then later checking that a password matches the previous hashedpassword
+        is very simple:.. code:: pycon    >>> import bcrypt    >>> password = b\"super
+        secret password\"    >>> # Hash a password for the first time, with a randomly-generated
+        salt    >>> hashed = bcrypt.hashpw(password, bcrypt.gensalt())    >>> # Check
+        that an unhashed password matches one that has previously been    >>> # hashed
+        \   >>> if bcrypt.checkpw(password, hashed):    ...     print(\"It Matches!\")
+        \   ... else:    ...     print(\"It Does not Match :(\")KDF~~~As of 3.0.0
+        ``bcrypt`` now offers a ``kdf`` function which does ``bcrypt_pbkdf``.This
+        KDF is used in OpenSSH's newer encrypted private key format... code:: pycon
+        \   >>> import bcrypt    >>> key = bcrypt.kdf(    ...     password=b'password',
+        \   ...     salt=b'salt',    ...     desired_key_bytes=32,    ...     rounds=100)Adjustable
+        Work Factor~~~~~~~~~~~~~~~~~~~~~~One of bcrypt's features is an adjustable
+        logarithmic work factor. To adjustthe work factor merely pass the desired
+        number of rounds to``bcrypt.gensalt(rounds=12)`` which defaults to 12):..
+        code:: pycon    >>> import bcrypt    >>> password = b\"super secret password\"
+        \   >>> # Hash a password for the first time, with a certain number of rounds
+        \   >>> hashed = bcrypt.hashpw(password, bcrypt.gensalt(14))    >>> # Check
+        that a unhashed password matches one that has previously been    >>> #   hashed
+        \   >>> if bcrypt.checkpw(password, hashed):    ...     print(\"It Matches!\")
+        \   ... else:    ...     print(\"It Does not Match :(\")Adjustable Prefix~~~~~~~~~~~~~~~~~Another
+        one of bcrypt's features is an adjustable prefix to let you define whatlibraries
+        you'll remain compatible with. To adjust this, pass either ``2a`` or``2b``
+        (the default) to ``bcrypt.gensalt(prefix=b\"2b\")`` as a bytes object.As of
+        3.0.0 the ``$2y$`` prefix is still supported in ``hashpw`` but deprecated.Maximum
+        Password Length~~~~~~~~~~~~~~~~~~~~~~~The bcrypt algorithm only handles passwords
+        up to 72 characters, any charactersbeyond that are ignored. To work around
+        this, a common approach is to hash apassword with a cryptographic hash (such
+        as ``sha256``) and then base64encode it to prevent NULL byte problems before
+        hashing the result with``bcrypt``:.. code:: pycon    >>> password = b\"an
+        incredibly long password\" * 10    >>> hashed = bcrypt.hashpw(    ...     base64.b64encode(hashlib.sha256(password).digest()),
+        \   ...     bcrypt.gensalt()    ... )Compatibility-------------This library
+        should be compatible with py-bcrypt and it will run on Python3.6+, and PyPy
+        3.C Code------This library uses code from OpenBSD.Security--------``bcrypt``
+        follows the `same security policy as cryptography`_, if youidentify a vulnerability,
+        we ask you to contact us privately... _`same security policy as cryptography`:
+        https://cryptography.io/en/latest/security.html.. _`standard library`: https://docs.python.org/3/library/hashlib.html#hashlib.scrypt..
+        _`argon2_cffi`: https://argon2-cffi.readthedocs.io.. _`cryptography`: https://cryptography.io/en/latest/hazmat/primitives/key-derivation-functions/#cryptography.hazmat.primitives.kdf.scrypt.Scrypt"
+      Package: bcrypt
+      Source: pip
+      Version: 4.0.1
+      Hash: ''
+      licenses:
+      - Apache-2.0
+      - BSD-3-Clause
+      Title: bcrypt
+      DownloadURL: https://files.pythonhosted.org/packages/8c/ae/3af7d006aacf513975fd1948a6b4d6f8b4a307f8a244e1a3d3774b297aad/bcrypt-4.0.1.tar.gz
+  bazaar:
+    register: 'no'
+    prim: 8/CTX1023008
+    community_link: https://github.com/pyca/bcrypt
+    community_name: https://github.com/pyca/bcrypt
+    community_url: https://github.com/pyca/bcrypt
+    component_comment: ''
+    component_highlevel_description: Modern(-ish) password hashing for your software
+      and your servers
+    component_name: bcrypt
+    component_platform: linux
+    component_programing_language: Python
+    component_version: 4.0.1
+    licenses:
+    - FAL1159004/20 (Apache License 2.0 (Apache-2.0))
+    src_download_link: https://files.pythonhosted.org/packages/8c/ae/3af7d006aacf513975fd1948a6b4d6f8b4a307f8a244e1a3d3774b297aad/bcrypt-4.0.1.tar.gz
+    stako_decision_reason: automatic
+    stako: ESW2
+    stako_comment: ''
+    bazaarurl: https://scas.internal.ericsson.com/search3pp?id=1027041&id-filter=equals&rowDisplay=Card-Simple
+    recode: ''
+    retext: ''
+    country: United States
+    crypto: No Encryption
+    programming_language: Python
+  encryptions:
+    used:
+    - ''
+  evms:
+    register: 'yes'
+    product_name: bcrypt
+    target_sw: linux
+    vendor: pip
+    version: 4.0.1
+    web_url: https://github.com/pyca/bcrypt/
+  licenses:
+  - Apache-2.0
+  - BSD-3-Clause
+  name: bcrypt
+  primary:
+  - this
+  subcomponent: false
+  type: FOSS
+  versions:
+  - 4.0.1
+  mimer:
+    linking: Static
+    product_number: CTX1023008
+    product_version_label: 4.0.1
+    selected_licenses:
+    - Apache-2.0
+    obligation: Including the full license text in a prominent place with the software
+      when the FOSS is distributed
+    usage: Use as is
+    primary: 'True'
+  alerts:
+  - Stako is 'ESW2', BAZAAR/SCAS component is not recommended to be used
+- ID: gevent+23.9.1
+  additional_info:
+    fossa-attribution:
+      Description: '======== gevent========.. image:: https://github.com/gevent/gevent/workflows/gevent%20testing/badge.svg   :target:
+        https://github.com/gevent/gevent/actions.. image:: https://ci.appveyor.com/api/projects/status/bqxl88yhpho223jg?svg=true   :target:
+        https://ci.appveyor.com/project/denik/gevent.. image:: https://coveralls.io/repos/gevent/gevent/badge.svg?branch=master&service=github   :target:
+        https://coveralls.io/github/gevent/gevent?branch=master..  This file is included
+        in README.rst from the top-level  so it is limited to pure ReST markup, not
+        Sphinx.gevent is a coroutine_ -based Python_ networking library that uses`greenlet
+        <https://greenlet.readthedocs.io>`_ to provide a high-level synchronous API
+        on top of the `libev`_or `libuv`_ event loop.Features include:* Fast event
+        loop based on `libev`_ or `libuv`_.* Lightweight execution units based on
+        greenlets.* API that re-uses concepts from the Python standard library (for  examples
+        there are `events`_ and  `queues`_).* `Cooperative sockets with SSL support
+        <http://www.gevent.org/api/index.html#networking>`_* `Cooperative DNS queries
+        <http://www.gevent.org/dns.html>`_ performed through a threadpool,  dnspython,
+        or c-ares.* `Monkey patching utility <http://www.gevent.org/intro.html#monkey-patching>`_
+        to get 3rd party modules to become cooperative* TCP/UDP/HTTP servers* Subprocess
+        support (through `gevent.subprocess`_)* Thread poolsgevent is `inspired by
+        eventlet`_ but features a more consistent API,simpler implementation and better
+        performance. Read why others `usegevent`_ and check out the list of the `open
+        source projects based ongevent`_.gevent was written by `Denis Bilenko <http://denisbilenko.com/>`_.Since
+        version 1.1, gevent is maintained by Jason Madden for`NextThought <https://nextthought.com>`_
+        (through gevent 21) and`Institutional Shareholder Services <https://www.issgovernance.com>`_with
+        help from the `contributors<https://github.com/gevent/gevent/graphs/contributors>`_
+        and islicensed under the MIT license.See `what''s new`_ in the latest major
+        release.Check out the detailed changelog_ for this version... _events: http://www.gevent.org/api/gevent.event.html#gevent.event.Event..
+        _queues: http://www.gevent.org/api/gevent.queue.html#gevent.queue.Queue..
+        _gevent.subprocess: http://www.gevent.org/api/gevent.subprocess.html#module-gevent.subprocess..
+        _coroutine: https://en.wikipedia.org/wiki/Coroutine.. _Python: http://python.org..
+        _libev: http://software.schmorp.de/pkg/libev.html.. _libuv: http://libuv.org..
+        _inspired by eventlet: http://blog.gevent.org/2010/02/27/why-gevent/.. _use
+        gevent: http://groups.google.com/group/gevent/browse_thread/thread/4de9703e5dca8271..
+        _open source projects based on gevent: https://github.com/gevent/gevent/wiki/Projects..
+        _what''s new: http://www.gevent.org/whatsnew_1_5.html.. _changelog: http://www.gevent.org/changelog.htmlRead
+        the documentation online at http://www.gevent.org.Post issues on the `bug
+        tracker`_, discuss and ask open endedquestions on the `mailing list`_, and
+        find announcements andinformation on the blog_ and `twitter (@gevent)`_.===============================
+        Installation and Requirements===============================.. _installation:..  This
+        file is included in README.rst so it is limited to plain  ReST markup, not
+        Sphinx... note::   If you are reading this document on the `Python Package
+        Index`_   (PyPI, https://pypi.org/), it is specific to the version of gevent
+        that   you are viewing. If you are viewing this document on gevent.org, it   refers
+        to the current state of gevent in source control (git   master).Supported
+        Platforms===================This version of gevent runs on Python 3.8 and
+        up, (for exact detailsof tested versions, see the classifiers on the PyPI
+        page or in``setup.py``). gevent requires the `greenlet<https://greenlet.readthedocs.io>`_
+        library and will install the`cffi`_ library by default on Windows. The cffi
+        library will becomethe default on all platforms in a future release of gevent.This
+        version of gevent is also tested on on PyPy 3.10 (7.3.12); itshould run on
+        PyPy 3.9 and above. On PyPy, there are no externaldependencies.gevent is tested
+        on Windows, macOS, and Linux, and should run on mostother Unix-like operating
+        systems (e.g., FreeBSD, Solaris, etc.).. note::   Windows is supported as
+        a tier 2, "best effort," platform. It is   suitable for development, but not
+        recommended for production. In   particular, PyPy3 on Windows may have issues,
+        especially with   subprocesses.   On Windows using the deprecated libev backend,
+        gevent is   limited to a maximum of 1024 open sockets due to   `limitations
+        in libev`_. This limitation should not exist   with the default libuv backend.Older
+        Versions of Python------------------------Users of older versions of Python
+        2 or Python 3 may install an olderversion of gevent. Note that these versions
+        are generally notsupported.+-------+-------+|Python |Gevent ||Version|Version|+=======+=======+|2.5    |1.0.x  ||       |       |+-------+-------+|2.6    |1.1.x  |+-------+-------+|<=     |1.2.x  ||2.7.8  |       |+-------+-------+|3.3    |1.2.x  |+-------+-------+|3.4.0
+        -| 1.3.x ||3.4.2  |       ||       |       |+-------+-------+|3.4.3  | 1.4.x
+        ||       |       ||       |       |+-------+-------+|3.5.x  | 20.9.0||       |       ||       |       |+-------+-------+|2.7.9
+        -|       ||2.7.18,| 22.10 ||3.6,   |       ||3.7    |       ||       |       |+-------+-------+Installation============..
+        note::   This section is about installing released versions of gevent as   distributed
+        on the `Python Package Index`_. For building gevent   from source, including
+        customizing the build and embedded   libraries, see `Installing From Source`_...
+        _Python Package Index: http://pypi.org/project/geventgevent and greenlet can
+        both be installed with `pip`_, e.g., ``pipinstall gevent``. Installation using
+        `buildout<http://docs.buildout.org/en/latest/>`_ is also supported.On Windows,
+        macOS, and Linux, both gevent and greenlet aredistributed as binary `wheels`_...
+        tip::   You need Pip 8.0 or later, or buildout 2.10.0 to install the binary   wheels
+        on Windows or macOS. On Linux, you''ll need `pip 19   <https://github.com/pypa/pip/pull/5008>`_
+        to install the   manylinux2010 wheels... tip::   While the x86-64 binaries
+        are considered production quality, they   are built with relatively low optimization
+        levels and no hardware   specific optimizations. Serious production users
+        are encouraged to   install from source with appropriate compiler flags...
+        tip::   Beginning with gevent 20.12.0, 64-bit ARM binaries are distributed   on
+        PyPI for aarch64 manylinux2014 compatible systems. Installing these   needs
+        a very recent version of ``pip``. These wheels *do not*   contain the c-ares
+        resolver, are not tested, and are built with   very low levels of optimizations.
+        Serious production users of   gevent on 64-bit ARM systems are encouraged
+        to build their own   binary wheels.   Beginning with gevent 22.10.0, ppc64le
+        binaries are distributed on   PyPI. The same caveats apply as for 64-bit ARM
+        binaries. Using them   for anything other than local development is discouraged.   Beginning
+        with gevent 23, muslinux aarch64 and S390X binaries   are distributed on PyPI.
+        The same caveats apply as for 64-bit ARM   binaries. Using them for anything
+        other than local development is   discouraged.Installing From Source----------------------If
+        you are unable to use the binary wheels (for platforms where nopre-built wheels
+        are available or if wheel installation is disabled),you can build gevent from
+        source. A normal ``pip install`` willfall back to doing this if no binary
+        wheel is available. See`Installing From Source`_ for more, including common
+        installation issues.Extra Dependencies==================There are a numberof
+        additional libraries that extend gevent''s functionality and will beused if
+        they are available. All of these may be installed using`setuptools extras<https://setuptools.readthedocs.io/en/latest/setuptools.html#declaring-extras-optional-features-with-their-own-dependencies>`_,as
+        named below, e.g., ``pip install gevent[events]``.events    In versions of
+        gevent up to and including 20.5.0, this provided configurable    event support
+        using `zope.event    <https://pypi.org/project/zope.event>`_ and was highly    recommended.    In
+        versions after that, this extra is empty and does nothing. It    will be removed
+        in gevent 21.0.dnspython    Enables a pure-Python resolver, backed by `dnspython    <https://pypi.org/project/dnspython>`_.
+        On Python 2, this also    includes `idna <https://pypi.org/project/idna>`_.
+        They can be    installed with the ``dnspython`` extra.    .. note:: This is
+        not compatible with Python 3.10+ or dnspython 2.monitor    Enhancements to
+        gevent''s self-monitoring capabilities. This    includes the `psutil <https://pypi.org/project/psutil>`_
+        library    which is needed to monitor memory usage. (Note that this may not    build
+        on all platforms.)recommended    A shortcut for installing suggested extras
+        together. This includes    the non-test extras defined here, plus additions
+        that improve    gevent''s operation on certain platforms (for example, in
+        the past,    it has included backports of newer APIs).test    Everything needed
+        to run the complete gevent test suite... _`pip`: https://pip.pypa.io/en/stable/installing/..
+        _`wheels`: http://pythonwheels.com.. _`gevent 1.5`: whatsnew_1_5.html.. _`Installing
+        From Source`: https://www.gevent.org/development/installing_from_source.html..
+        _`cffi`: https://cffi.readthedocs.io.. _`limitations in libev`: http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod#WIN32_PLATFORM_LIMITATIONS_AND_WORKA..
+        _bug tracker: https://github.com/gevent/gevent/issues.. _mailing list: http://groups.google.com/group/gevent..
+        _blog: https://dev.nextthought.com/blog/categories/gevent.html.. _twitter
+        (@gevent): http://twitter.com/gevent'
+      Package: gevent
+      Source: pip
+      Version: 23.9.1
+      Hash: ''
+      licenses:
+      - Apache-2.0
+      - BSD-2-Clause
+      - BSD-3-Clause
+      - CC-BY-4.0
+      - FSFAP
+      - FSFUL
+      - FSFULLR
+      - GPL-2.0-or-later
+      - GPL-2.0-with-autoconf-exception
+      - GPL-2.0-with-libtool-exception
+      - GPL-3.0-or-later
+      - ISC
+      - LGPL-2.1-or-later
+      - MIT
+      - PSF-2.0
+      - WTFPL
+      - X11
+      - gpl-2.0-ice
+      - gpl-3.0-plus WITH autoconf-macro-exception
+      - gpl-3.0-plus WITH autoconf-simple-exception
+      - gpl-3.0-plus WITH libtool-exception-2.0
+      - mit-old-style-no-advert
+      Title: gevent
+      DownloadURL: https://files.pythonhosted.org/packages/8e/ce/d2b9a376ee010f6d548bf1b6b6eddc372a175e6e100896e607c57e37f7cf/gevent-23.9.1.tar.gz
+  bazaar:
+    register: 'no'
+    prim: 23/CAX1057438
+    community_link: https://pypi.org/project/gevent/
+    community_name: https://pypi.org/project/gevent/
+    community_url: https://pypi.org/project/gevent/
+    component_comment: ''
+    component_highlevel_description: gevent is a coroutine-based Python networking
+      library that uses greenlet to provide a high-level synchronous API on top of
+      the libev event loop.
+    component_name: gevent
+    component_platform: linux
+    component_programing_language: Python
+    component_version: 23.9.1
+    licenses:
+    - FAL1159008 (MIT License (MIT))
+    src_download_link: https://files.pythonhosted.org/packages/8e/ce/d2b9a376ee010f6d548bf1b6b6eddc372a175e6e100896e607c57e37f7cf/gevent-23.9.1.tar.gz
+    stako_decision_reason: allowed
+    stako: ESW3
+    stako_comment: Copyleft license found.
+    bazaarurl: https://scas.internal.ericsson.com/search3pp?id=1064843&id-filter=equals&rowDisplay=Card-Simple
+    recode: ''
+    retext: ''
+    country: United States
+    crypto: No Encryption
+    programming_language: Python
+  encryptions:
+    used:
+    - ''
+  evms:
+    register: 'yes'
+    product_name: gevent
+    target_sw: linux
+    vendor: pip
+    version: 23.9.1
+    web_url: http://www.gevent.org/
+  licenses:
+  - Apache-2.0
+  - BSD-2-Clause
+  - BSD-3-Clause
+  - CC-BY-4.0
+  - FSFAP
+  - FSFUL
+  - FSFULLR
+  - GPL-2.0-or-later
+  - GPL-2.0-with-autoconf-exception
+  - GPL-2.0-with-libtool-exception
+  - GPL-3.0-or-later
+  - ISC
+  - LGPL-2.1-or-later
+  - MIT
+  - PSF-2.0
+  - WTFPL
+  - X11
+  - gpl-2.0-ice
+  - gpl-3.0-plus WITH autoconf-macro-exception
+  - gpl-3.0-plus WITH autoconf-simple-exception
+  - gpl-3.0-plus WITH libtool-exception-2.0
+  - mit-old-style-no-advert
+  name: gevent
+  primary:
+  - this
+  subcomponent: false
+  type: FOSS
+  versions:
+  - 23.9.1
+  mimer:
+    linking: Static
+    product_number: CAX1057438
+    product_version_label: 23.9.1
+    selected_licenses:
+    - MIT
+    obligation: Including the full license text in a prominent place with the software
+      when the FOSS is distributed
+    usage: Use as is
+    primary: 'True'
+- ID: greenlet+3.0.0
+  additional_info:
+    fossa-attribution:
+      Description: '.. This file is included into docs/history.rstGreenlets are lightweight
+        coroutines for in-process concurrentprogramming.The "greenlet" package is
+        a spin-off of `Stackless`_, a version ofCPython that supports micro-threads
+        called "tasklets". Tasklets runpseudo-concurrently (typically in a single
+        or a few OS-level threads)and are synchronized with data exchanges on "channels".A
+        "greenlet", on the other hand, is a still more primitive notion ofmicro-thread
+        with no implicit scheduling; coroutines, in other words.This is useful when
+        you want to control exactly when your code runs.You can build custom scheduled
+        micro-threads on top of greenlet;however, it seems that greenlets are useful
+        on their own as a way tomake advanced control flow structures. For example,
+        we can recreategenerators; the difference with Python''s own generators is
+        that ourgenerators can call nested functions and the nested functions canyield
+        values too. (Additionally, you don''t need a "yield" keyword. Seethe example
+        in `test_generator.py<https://github.com/python-greenlet/greenlet/blob/adca19bf1f287b3395896a8f41f3f4fd1797fdc7/src/greenlet/tests/test_generator.py#L1>`_).Greenlets
+        are provided as a C extension module for the regular unmodifiedinterpreter...
+        _`Stackless`: http://www.stackless.comWho is using Greenlet?======================There
+        are several libraries that use Greenlet as a more flexiblealternative to Python''s
+        built in coroutine support: - `Concurrence`_ - `Eventlet`_ - `Gevent`_.. _Concurrence:
+        http://opensource.hyves.org/concurrence/.. _Eventlet: http://eventlet.net/..
+        _Gevent: http://www.gevent.org/Getting Greenlet================The easiest
+        way to get Greenlet is to install it with pip::  pip install greenletSource
+        code archives and binary distributions are available on thepython package
+        index at https://pypi.org/project/greenletThe source code repository is hosted
+        on github:https://github.com/python-greenlet/greenletDocumentation is available
+        on readthedocs.org:https://greenlet.readthedocs.io'
+      Package: greenlet
+      Source: pip
+      Version: 3.0.0
+      Hash: ''
+      licenses:
+      - MIT
+      - PSF-2.0
+      Title: greenlet
+      DownloadURL: https://files.pythonhosted.org/packages/b6/02/47dbd5e1c9782e6d3f58187fa10789e308403f3fc3a490b3646b2bff6d9f/greenlet-3.0.0.tar.gz
+  bazaar:
+    register: 'no'
+    prim: 22/CAX1056535
+    community_link: https://pypi.org/project/greenlet/
+    community_name: https://pypi.org/project/greenlet/
+    community_url: https://pypi.org/project/greenlet/
+    component_comment: ''
+    component_highlevel_description: Lightweight in-process concurrent programming
+    component_name: greenlet
+    component_platform: linux
+    component_programing_language: C
+    component_version: 3.0.0
+    licenses:
+    - FAL1159008 (MIT License (MIT))
+    src_download_link: https://files.pythonhosted.org/packages/b6/02/47dbd5e1c9782e6d3f58187fa10789e308403f3fc3a490b3646b2bff6d9f/greenlet-3.0.0.tar.gz
+    stako_decision_reason: automatic
+    stako: ESW2
+    stako_comment: ''
+    bazaarurl: https://scas.internal.ericsson.com/search3pp?id=1064841&id-filter=equals&rowDisplay=Card-Simple
+    recode: ''
+    retext: ''
+    country: United States
+    crypto: ''
+    programming_language: C
+  encryptions:
+    used:
+    - ''
+  evms:
+    register: 'yes'
+    product_name: greenlet
+    target_sw: linux
+    vendor: pip
+    version: 3.0.0
+    web_url: https://greenlet.readthedocs.io/
+  licenses:
+  - MIT
+  - PSF-2.0
+  name: greenlet
+  primary:
+  - this
+  subcomponent: false
+  type: FOSS
+  versions:
+  - 3.0.0
+  mimer:
+    linking: Static
+    product_number: CAX1056535
+    product_version_label: 3.0.0
+    selected_licenses:
+    - MIT
+    obligation: Including the full license text in a prominent place with the software
+      when the FOSS is distributed
+    usage: Use as is
+    primary: 'True'
+- ID: gunicorn+21.2.0
+  additional_info:
+    fossa-attribution:
+      Description: 'Gunicorn--------.. image:: https://img.shields.io/pypi/v/gunicorn.svg?style=flat    :alt:
+        PyPI version    :target: https://pypi.python.org/pypi/gunicorn.. image:: https://img.shields.io/pypi/pyversions/gunicorn.svg    :alt:
+        Supported Python versions    :target: https://pypi.python.org/pypi/gunicorn..
+        image:: https://github.com/benoitc/gunicorn/actions/workflows/tox.yml/badge.svg    :alt:
+        Build Status    :target: https://github.com/benoitc/gunicorn/actions/workflows/tox.yml..
+        image:: https://github.com/benoitc/gunicorn/actions/workflows/lint.yml/badge.svg    :alt:
+        Lint Status    :target: https://github.com/benoitc/gunicorn/actions/workflows/lint.ymlGunicorn
+        ''Green Unicorn'' is a Python WSGI HTTP Server for UNIX. It''s a pre-forkworker
+        model ported from Ruby''s Unicorn_ project. The Gunicorn server is broadlycompatible
+        with various web frameworks, simply implemented, light on serverresource usage,
+        and fairly speedy.Feel free to join us in `#gunicorn`_ on `Libera.chat`_.Documentation-------------The
+        documentation is hosted at https://docs.gunicorn.org.Installation------------Gunicorn
+        requires **Python 3.x >= 3.5**.Install from PyPI::    $ pip install gunicornUsage-----Basic
+        usage::    $ gunicorn [OPTIONS] APP_MODULEWhere ``APP_MODULE`` is of the pattern
+        ``$(MODULE_NAME):$(VARIABLE_NAME)``. Themodule name can be a full dotted path.
+        The variable name refers to a WSGIcallable that should be found in the specified
+        module.Example with test app::    $ cd examples    $ gunicorn --workers=2
+        test:appContributing------------See `our complete contributor''s guide <CONTRIBUTING.md>`_
+        for more details.License-------Gunicorn is released under the MIT License.
+        See the LICENSE_ file for moredetails... _Unicorn: https://bogomips.org/unicorn/..
+        _`#gunicorn`: https://web.libera.chat/?channels=#gunicorn.. _`Libera.chat`:
+        https://libera.chat/.. _LICENSE: https://github.com/benoitc/gunicorn/blob/master/LICENSE'
+      Package: gunicorn
+      Source: pip
+      Version: 21.2.0
+      Hash: ''
+      licenses:
+      - HPND
+      - MIT
+      - OFL-1.1
+      - Python-2.0
+      Title: gunicorn
+      DownloadURL: https://files.pythonhosted.org/packages/06/89/acd9879fa6a5309b4bf16a5a8855f1e58f26d38e0c18ede9b3a70996b021/gunicorn-21.2.0.tar.gz
+  bazaar:
+    register: 'no'
+    prim: 9/CAX1057411
+    community_link: https://pypi.org/project/gunicorn/
+    community_name: https://pypi.org/project/gunicorn/
+    community_url: https://pypi.org/project/gunicorn/
+    component_comment: ''
+    component_highlevel_description: Gunicorn 'Green Unicorn' is a Python WSGI HTTP
+      Server for UNIX. It's a pre-fork worker model ported from Ruby's Unicorn project.
+    component_name: Gunicorn
+    component_platform: linux
+    component_programing_language: Python
+    component_version: 21.2.0
+    licenses:
+    - FAL1159008 (MIT License (MIT))
+    src_download_link: https://files.pythonhosted.org/packages/06/89/acd9879fa6a5309b4bf16a5a8855f1e58f26d38e0c18ede9b3a70996b021/gunicorn-21.2.0.tar.gz
+    stako_decision_reason: allowed
+    stako: ESW3
+    stako_comment: Copyleft license found.
+    bazaarurl: https://scas.internal.ericsson.com/search3pp?id=1054320&id-filter=equals&rowDisplay=Card-Simple
+    recode: ''
+    retext: ''
+    country: France
+    crypto: No Encryption
+    programming_language: Python
+  encryptions:
+    used:
+    - ''
+  evms:
+    register: 'yes'
+    product_name: gunicorn
+    target_sw: linux
+    vendor: pip
+    version: 21.2.0
+    web_url: https://gunicorn.org
+  licenses:
+  - HPND
+  - MIT
+  - OFL-1.1
+  - Python-2.0
+  name: gunicorn
+  primary:
+  - this
+  subcomponent: false
+  type: FOSS
+  versions:
+  - 21.2.0
+  mimer:
+    linking: Static
+    product_number: CAX1057411
+    product_version_label: 21.2.0
+    selected_licenses:
+    - MIT
+    obligation: Including the full license text in a prominent place with the software
+      when the FOSS is distributed
+    usage: Use as is
+    primary: 'True'
+  alerts:
+  - Stako is 'ESW3', BAZAAR/SCAS component is not recommended to be used
+  - '''Gunicorn'': Manual set stako_decision_reason: ''allowed'' for stako: ''ESW3'',
+    team takes the risk!'
+- ID: packaging+23.2
+  additional_info:
+    fossa-attribution:
+      Description: 'packaging=========.. start-introReusable core utilities for various
+        Python Packaging`interoperability specifications <https://packaging.python.org/specifications/>`_.This
+        library provides utilities that implement the interoperabilityspecifications
+        which have clearly one correct behaviour (eg: :pep:`440`)or benefit greatly
+        from having a single shared implementation (eg: :pep:`425`)... end-introThe
+        ``packaging`` project includes the following: version handling, specifiers,markers,
+        requirements, tags, utilities.Documentation-------------The `documentation`_
+        provides information and the API for the following:- Version Handling- Specifiers-
+        Markers- Requirements- Tags- UtilitiesInstallation------------Use ``pip``
+        to install these utilities::    pip install packagingThe ``packaging`` library
+        uses calendar-based versioning (``YY.N``).Discussion----------If you run into
+        bugs, you can file them in our `issue tracker`_.You can also join ``#pypa``
+        on Freenode to ask questions or get involved... _`documentation`: https://packaging.pypa.io/..
+        _`issue tracker`: https://github.com/pypa/packaging/issuesCode of Conduct---------------Everyone
+        interacting in the packaging project''s codebases, issue trackers, chatrooms,
+        and mailing lists is expected to follow the `PSF Code of Conduct`_... _PSF
+        Code of Conduct: https://github.com/pypa/.github/blob/main/CODE_OF_CONDUCT.mdContributing------------The
+        ``CONTRIBUTING.rst`` file outlines how to contribute to this project aswell
+        as how to report a potential security issue. The documentation for thisproject
+        also covers information about `project development`_ and `security`_... _`project
+        development`: https://packaging.pypa.io/en/latest/development/.. _`security`:
+        https://packaging.pypa.io/en/latest/security/Project History---------------Please
+        review the ``CHANGELOG.rst`` file or the `Changelog documentation`_ forrecent
+        changes and project history... _`Changelog documentation`: https://packaging.pypa.io/en/latest/changelog/'
+      Package: packaging
+      Source: pip
+      Version: '23.2'
+      Hash: ''
+      licenses:
+      - Apache-2.0
+      - BSD-2-Clause
+      - BSD-3-Clause
+      Title: packaging
+      DownloadURL: https://files.pythonhosted.org/packages/fb/2b/9b9c33ffed44ee921d0967086d653047286054117d584f1b1a7c22ceaf7b/packaging-23.2.tar.gz
+  bazaar:
+    register: 'no'
+    prim: 20/CTX1020778
+    community_link: https://github.com/pypa/packaging
+    community_name: https://github.com/pypa/packaging
+    community_url: https://github.com/pypa/packaging
+    component_comment: ''
+    component_highlevel_description: Core utilities for Python packages
+    component_name: packaging
+    component_platform: linux
+    component_programing_language: Python
+    component_version: '23.2'
+    licenses:
+    - FAL1159003/2 (BSD 3-Clause (BSD-3-Clause))
+    - FAL1159004/20 (Apache License 2.0 (Apache-2.0))
+    src_download_link: https://github.com/pypa/packaging/archive/23.2.tar.gz
+    stako_decision_reason: automatic
+    stako: ESW2
+    stako_comment: ''
+    bazaarurl: https://scas.internal.ericsson.com/search3pp?id=1064089&id-filter=equals&rowDisplay=Card-Simple
+    recode: ''
+    retext: ''
+    country: United States
+    crypto: ''
+    programming_language: Python
+  encryptions:
+    used:
+    - ''
+  evms:
+    register: 'yes'
+    product_name: packaging
+    target_sw: linux
+    vendor: pip
+    version: '23.2'
+    web_url: https://pypi.org/project/packaging/23.2/
+  licenses:
+  - Apache-2.0
+  - BSD-2-Clause
+  - BSD-3-Clause
+  name: packaging
+  primary:
+  - this
+  subcomponent: false
+  type: FOSS
+  versions:
+  - '23.2'
+  mimer:
+    linking: Static
+    product_number: CTX1020778
+    product_version_label: '23.2'
+    selected_licenses:
+    - Apache-2.0
+    obligation: Including the full license text in a prominent place with the software
+      when the FOSS is distributed
+    usage: Use as is
+    primary: 'True'
+- ID: passlib+1.7.4
+  additional_info:
+    fossa-attribution:
+      Description: Passlib is a password hashing library for Python 2 & 3, which providescross-platform
+        implementations of over 30 password hashing algorithms, as wellas a framework
+        for managing existing password hashes. It's designed to be usefulfor a wide
+        range of tasks, from verifying a hash found in /etc/shadow, toproviding full-strength
+        password hashing for multi-user applications.* See the `documentation <https://passlib.readthedocs.io>`_  for
+        details, installation instructions, and examples.* See the `homepage <https://foss.heptapod.net/python-libs/passlib/wikis/home>`_  for
+        the latest news and more information.* See the `changelog <https://passlib.readthedocs.io/en/stable/history>`_  for
+        a description of what's new in Passlib.All releases are signed with the gpg
+        key`4D8592DF4CE1ED31 <http://pgp.mit.edu:11371/pks/lookup?op=get&search=0x4D8592DF4CE1ED31>`_.
+      Package: passlib
+      Source: pip
+      Version: 1.7.4
+      Hash: ''
+      licenses:
+      - BSD-3-Clause
+      - Beerware
+      - ISC
+      Title: passlib
+      DownloadURL: https://files.pythonhosted.org/packages/3b/a4/ab6b7589382ca3df236e03faa71deac88cae040af60c071a78d254a62172/passlib-1.7.4-py2.py3-none-any.whl
+  bazaar:
+    register: 'no'
+    prim: 6/CAX1056964
+    community_link: https://pypi.python.org/pypi/passlib
+    community_name: https://pypi.python.org/pypi/passlib
+    community_url: https://pypi.python.org/pypi/passlib
+    component_comment: ''
+    component_highlevel_description: "comprehensive password hashing framework supporting
+      over 30 schemes\nPasslib is a password hashing library for Python 2 & 3, which
+      provides\ncross-platform implementations of over 30 password hashing algorithms,
+      as well\nas a framework for managing existing password hashes. It's designed
+      to be useful\nfor a wide range of tasks, from verifying a hash found in /etc/shadow,
+      to\nproviding full-strength password hashing for multi-user applications.\n\n*
+      See the `documentation <https://passlib.readthedocs.io>`_\n  for details, installation
+      instructions, and examples.\n\n* See the `homepage <https://foss.heptapod.net/python-libs/passlib/wikis/home>`_\n
+      \ for the latest news and more information.\n\n* See the `changelog <https://passlib.readthedocs.io/en/stable/history>`_\n
+      \ for a description of what's new in Passlib.\n\nAll releases are signed with
+      the gpg key\n`4D8592DF4CE1ED31 <http://pgp.mit.edu:11371/pks/lookup?op=get&search=0x4D8592DF4CE1ED31>`_."
+    component_name: passlib
+    component_platform: linux
+    component_programing_language: Python
+    component_version: 1.7.4
+    licenses:
+    - FAL1159003/2 (BSD 3-Clause (BSD-3-Clause))
+    src_download_link: https://files.pythonhosted.org/packages/b6/06/9da9ee59a67fae7761aab3ccc84fa4f3f33f125b370f1ccdb915bf967c11/passlib-1.7.4.tar.gz
+    stako_decision_reason: allowed
+    stako: ESW3
+    stako_comment: Product version is older than 18 months
+    bazaarurl: https://scas.internal.ericsson.com/search3pp?id=954987&id-filter=equals&rowDisplay=Card-Simple
+    recode: ''
+    retext: ''
+    country: United States
+    crypto: No Encryption
+    programming_language: Python
+  encryptions:
+    used:
+    - ''
+  evms:
+    register: 'yes'
+    product_name: passlib
+    target_sw: linux
+    vendor: pip
+    version: 1.7.4
+    web_url: https://passlib.readthedocs.io
+  licenses:
+  - BSD-3-Clause
+  - Beerware
+  - ISC
+  name: passlib
+  primary:
+  - this
+  subcomponent: false
+  type: FOSS
+  versions:
+  - 1.7.4
+  mimer:
+    linking: Static
+    product_number: CAX1056964
+    product_version_label: 1.7.4
+    selected_licenses:
+    - BSD-3-Clause
+    obligation: Including the full license text in a prominent place with the software
+      when the FOSS is distributed
+    usage: Use as is
+    primary: 'True'
+  alerts:
+  - '''passlib'': Manual set stako_decision_reason: ''allowed'' for stako: ''ESW3'',
+    team takes the risk!'
+  - Stako is 'ESW3', BAZAAR/SCAS component is not recommended to be used
+- ID: pypiserver+2.0.1
+  additional_info:
+    fossa-attribution:
+      Description: '![pypi server logo](docs/__resources__/pypiserver_logo.png)[**pypiserver
+        - minimal PyPI server for use with pip/easy_install**](<>)[![pypi badge](https://img.shields.io/pypi/v/pypiserver.svg)](https://shields.io/)[![ci
+        workflow](https://github.com/pypiserver/pypiserver/actions/workflows/ci.yml/badge.svg)](https://github.com/pypiserver/pypiserver/actions/workflows/ci.yml)[![Generic
+        badge](https://img.shields.io/badge/python-3.6%7C3.7%7C3.8+-blue.svg)](https://pypi.org/project/pypiserver/)[![Generic
+        badge](https://img.shields.io/badge/license-MIT%7Czlib/libpng-blue.svg)](https://raw.githubusercontent.com/pypiserver/pypiserver/master/LICENSE.txt)|
+        name        | description                                                                                                                                                                                                                                     ||
+        :---------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        || Version     | 2.0.1                                                                                                                                                                                                                                           ||
+        Date:       | 2023-10-01                                                                                                                                                                                                                                      ||
+        Source      | https://github.com/pypiserver/pypiserver                                                                                                                                                                                                        ||
+        PyPI        | https://pypi.org/project/pypiserver/                                                                                                                                                                                                            ||
+        Tests       | https://github.com/pypiserver/pypiserver/actions                                                                                                                                                                                                ||
+        Maintainers | Kostis Anagnostopoulos <ankostis@gmail.com>, Matthew Planchard
+        <mplanchard@gmail.com>,  Dmitrii Orlov <dmtree.dev@yahoo.com>,  **Someone
+        new?** We are looking for new maintainers! [#397](https://github.com/pypiserver/pypiserver/issues/397)
+        || License     | zlib/libpng + MIT                                                                                                                                                                                                                               ||
+        Community   | https://pypiserver.zulipchat.com                                                                                                                                                                                                                |Chat
+        with us on [Zulip](https://pypiserver.zulipchat.com)!**pypiserver** is a minimal
+        [PyPI](https://pypi.org/) compatible server for **pip** or **easy_install**.It
+        is based on [bottle](http://bottlepy.org/) and serves packages from regular
+        directories.Wheels, bdists, eggs and accompanying PGP-signatures can be uploadedeither
+        with **pip**, **setuptools**, **twine**, **pypi-uploader**, or simply copiedwith
+        **scp**.NoteThe official software powering [PyPI](https://pypi.org/) is[Warehouse](https://github.com/pypa/warehouse/).
+        However,[Warehouse](https://github.com/pypa/warehouse/)is fairly specialized
+        to be **pypi.org**''s own software, and should notbe used in other contexts.
+        In particular, it does not officially supportbeing used as a custom package
+        index by users wishing to serve their ownpackages.**pypiserver** implements
+        the same interfaces as [PyPI](https://pypi.org/), allowingstandard Python
+        packaging tooling such as **pip** and **twine** tointeract with it as a package
+        index just as they would with [PyPI](https://pypi.org/), whilemaking it much
+        easier to get a running index server.# pypiserverTable of Contents- [pypiserver
+        - minimal PyPI server for use with pip/easy_install](#pypiserver---minimal-pypi-server-for-use-with-pipeasy_install)  -
+        [Quickstart Installation and Usage](#Quickstart-Installation-and-Usage)    -
+        [More details about pypi-server run](#More-details-about-pypi-server-run)    -
+        [More details about pypi-server update](#More-details-about-pypi-server-update)  -
+        [Client-Side Configurations](#Client-Side-Configurations)    - [Configuring
+        pip](#Configuring-pip)    - [Configuring easy_install](#Configuring-easy_install)  -
+        [Uploading Packages Remotely](#Uploading-Packages-Remotely)    - [Apache like
+        Authentication ( htpasswd )](#Apache-like-Authentication)    - [Upload with
+        setuptools](#Upload-with-setuptools)    - [Upload with twine](#Upload-with-twine)  -
+        [Using the Docker Image](#Using-the-Docker-Image)  - [Alternative Installation
+        methods](#Alternative-Installation-methods)    - [Installing the Very Latest
+        Version](#Installing-the-Very-Latest-Version)  - [Recipes](#Recipes)    -
+        [Managing the Package Directory](#Managing-the-Package-Directory)    - [Serving
+        Thousands of Packages](#Serving-Thousands-of-Packages)    - [Managing Automated
+        Startup](#Managing-Automated-Startup)      - [Running as a systemd service](#Running-as-a-systemd-service)      -
+        [Launching through supervisor](#Launching-through-supervisor)      - [Running
+        as a service with NSSM (Windows)](#Running-as-a-service-with-NSSM)    - [Using
+        a Different WSGI Server](#Using-a-Different-WSGI-Server)      - [Apache](#Apache)      -
+        [Gunicorn](#Gunicorn)      - [Paste](#Paste)    - [Behind a Reverse Proxy](#Behind-a-Reverse-Proxy)      -
+        [Nginx](#Nginx)      - [Supporting HTTPS](#Supporting-HTTPS)      - [Traefik](#Traefik)    -
+        [Utilizing the API](#Utilizing-the-API)      - [Using Ad-Hoc Authentication
+        Providers](#Using-Ad-Hoc-Authentication-Providers)    - [Use with MicroPython](#Use-with-MicroPython)    -
+        [Custom Health Check Endpoint](#Custom-Health-Check-Endpoint)      - [Configure
+        a custom health check by CLI arguments](#Configure-a-custom-health-check-by-CLI-arguments)      -
+        [Configure a custom health endpoint by script](#Configure-a-custom-health-endpoint-by-script)    -
+        [Sources](#Sources)    - [Known Limitations](#known-limitations)    - [Similar
+        Projects](#similar-projects)      - [Unmaintained or archived](#unmaintained-or-archived)    -
+        [Related Projects](#related-projects)    - [License](#license)## Quickstart
+        Installation and Usage**pypiserver** works with Python 3.6+ and PyPy3.Older
+        Python versions may still work, but they are not tested.For legacy Python
+        versions, use **pypiserver-1.x** series. Note that these arenot officially
+        supported, and will not receive bugfixes or new features.TipThe commands below
+        work on a unix-like operating system with a posix shell.The **''~''** character
+        expands to user''s home directory.If you''re using Windows, you''ll have to
+        use their "Windows counterparts".The same is true for the rest of this documentation.1.
+        Install **pypiserver** with this command```shell   pip install pypiserver                #
+        Or: pypiserver[passlib,cache]   mkdir ~/packages                      # Copy
+        packages into this directory.```See also [Alternative Installation methods](<>)2.
+        Copy some packages into your **~/packages** folder and then   get your **pypiserver**
+        up and running```shell   pypi-server run -p 8080 ~/packages &      # Will
+        listen to all IPs.```3. From the client computer, type this```shell   # Download
+        and install hosted packages.   pip install --extra-index-url http://localhost:8080/simple/
+        ...   # or   pip install --extra-index-url http://localhost:8080 ...   # Search
+        hosted packages.   pip search --index http://localhost:8080 ...   # Note that
+        pip search does not currently work with the /simple/ endpoint.```See also
+        [Client-side configurations](#Client-Side-Configurations) for avoiding tedious
+        typing.4. Enter **pypi-server -h** in the cmd-line to print a detailed usage
+        message```textusage: pypi-server [-h] [-v] [--log-file FILE] [--log-stream
+        STREAM]                   [--log-frmt FORMAT] [--hash-algo HASH_ALGO]                   [--backend
+        {auto,simple-dir,cached-dir}] [--version]                   {run,update} ...start
+        PyPI compatible package server serving packages from PACKAGES_DIRECTORY. If
+        PACKAGES_DIRECTORY is not given on the command line, it uses the default ~/packages.
+        pypiserver scans this directory recursively for packages. It skips packages
+        and directories starting with a dot. Multiple package directories may be specified.positional
+        arguments:  {run,update}    run                 Run pypiserver, serving packages
+        from                        PACKAGES_DIRECTORY    update              Handle
+        updates of packages managed by pypiserver. By                        default,
+        a pip command to update the packages is                        printed to
+        stdout for introspection or pipelining. See                        the `-x`
+        option for updating packages directly.optional arguments:  -h, --help            show
+        this help message and exit  -v, --verbose         Enable verbose logging;
+        repeat for more verbosity.  --log-file FILE       Write logging info into
+        this FILE, as well as to                        stdout or stderr, if configured.  --log-stream
+        STREAM   Log messages to the specified STREAM. Valid values are                        stdout,
+        stderr, and none  --log-frmt FORMAT     The logging format-string.  (see `logging.LogRecord`                        class
+        from standard python library)  --hash-algo HASH_ALGO                        Any
+        `hashlib` available algorithm to use for                        generating
+        fragments on package links. Can be disabled                        with one
+        of (0, no, off, false).  --backend {auto,simple-dir,cached-dir}                        A
+        backend implementation. Keep the default ''auto'' to                        automatically
+        determine whether to activate caching or                        not  --version             show
+        program''s version number and exitVisit https://github.com/pypiserver/pypiserver
+        for more information ```### More details about pypi server runEnter **pypi-server
+        run -h** in the cmd-line to print a detailed usage```textusage: pypi-server
+        run [-h] [-v] [--log-file FILE] [--log-stream STREAM]                       [--log-frmt
+        FORMAT] [--hash-algo HASH_ALGO]                       [--backend {auto,simple-dir,cached-dir}]
+        [--version]                       [-p PORT] [-i HOST] [-a AUTHENTICATE]                       [-P
+        PASSWORD_FILE] [--disable-fallback]                       [--fallback-url
+        FALLBACK_URL]                       [--health-endpoint HEALTH_ENDPOINT] [--server
+        METHOD]                       [-o] [--welcome HTML_FILE] [--cache-control
+        AGE]                       [--log-req-frmt FORMAT] [--log-res-frmt FORMAT]                       [--log-err-frmt
+        FORMAT]                       [package_directory [package_directory ...]]positional
+        arguments:  package_directory     The directory from which to serve packages.optional
+        arguments:  -h, --help            show this help message and exit  -v, --verbose         Enable
+        verbose logging; repeat for more verbosity.  --log-file FILE       Write logging
+        info into this FILE, as well as to                        stdout or stderr,
+        if configured.  --log-stream STREAM   Log messages to the specified STREAM.
+        Valid values are                        stdout, stderr, and none  --log-frmt
+        FORMAT     The logging format-string.  (see `logging.LogRecord`                        class
+        from standard python library)  --hash-algo HASH_ALGO                        Any
+        `hashlib` available algorithm to use for                        generating
+        fragments on package links. Can be disabled                        with one
+        of (0, no, off, false).  --backend {auto,simple-dir,cached-dir}                        A
+        backend implementation. Keep the default ''auto'' to                        automatically
+        determine whether to activate caching or                        not  --version             show
+        program''s version number and exit  -p PORT, --port PORT  Listen on port PORT
+        (default: 8080)  -i HOST, -H HOST, --interface HOST, --host HOST                        Listen
+        on interface INTERFACE (default: 0.0.0.0)  -a AUTHENTICATE, --authenticate
+        AUTHENTICATE                        Comma-separated list of (case-insensitive)
+        actions to                        authenticate (options: download, list, update;                        default:
+        update).                                                  Any actions not
+        specified are not authenticated, so                         to authenticate
+        downloads and updates, but allow                         unauthenticated viewing
+        of the package list, you would                         use:                                                   pypi-server
+        -a ''download, update'' -P                          ./my_passwords.htaccess                                                 To
+        disable authentication, use:                                                   pypi-server
+        -a . -P .                                                 See the `-P` option
+        for configuring users and                        passwords.                                                 Note
+        that when uploads are not protected, the                        `register`
+        command is not necessary, but `~/.pypirc`                        still needs
+        username and password fields, even if                        bogus.  -P PASSWORD_FILE,
+        --passwords PASSWORD_FILE                        Use an apache htpasswd file
+        PASSWORD_FILE to set                        usernames and passwords for authentication.                                                 To
+        allow unauthorized access, use:                                                   pypi-server
+        -a . -P .                           --disable-fallback    Disable the default
+        redirect to PyPI for packages not                        found in the local
+        index.  --fallback-url FALLBACK_URL                        Redirect to FALLBACK_URL
+        for packages not found in the                        local index.  --health-endpoint
+        HEALTH_ENDPOINT                        Configure a custom liveness endpoint.
+        It always                        returns 200 Ok if the service is up. Otherwise,
+        it                        means that the service is not responsive.  --server
+        METHOD       Use METHOD to run the server. Valid values include                        paste,
+        cherrypy, twisted, gunicorn, gevent, wsgiref,                        and auto.
+        The default is to use "auto", which chooses                        one of
+        paste, cherrypy, twisted, or wsgiref.  -o, --overwrite       Allow overwriting
+        existing package files during                        upload.  --welcome HTML_FILE   Use
+        the contents of HTML_FILE as a custom welcome                        message
+        on the home page.  --cache-control AGE   Add "Cache-Control: max-age=AGE"
+        header to package                        downloads. Pip 6+ requires this for
+        caching.AGE is                        specified in seconds.  --log-req-frmt
+        FORMAT                        A format-string selecting Http-Request properties
+        to                        log; set to ''%s'' to see them all.  --log-res-frmt
+        FORMAT                        A format-string selecting Http-Response properties
+        to                        log; set to ''%s'' to see them all.  --log-err-frmt
+        FORMAT                        A format-string selecting Http-Error properties
+        to                        log; set to ''%s'' to see them all.```### More details
+        about pypi-server updateMore details about **pypi-server update**```textusage:
+        pypi-server update [-h] [-v] [--log-file FILE] [--log-stream STREAM]                          [--log-frmt
+        FORMAT] [--hash-algo HASH_ALGO]                          [--backend {auto,simple-dir,cached-dir}]
+        [--version]                          [-x] [-d DOWNLOAD_DIRECTORY] [-u]                          [--blacklist-file
+        IGNORELIST_FILE]                          [package_directory [package_directory
+        ...]]positional arguments:  package_directory     The directory from which
+        to serve packages.optional arguments:  -h, --help            show this help
+        message and exit  -v, --verbose         Enable verbose logging; repeat for
+        more verbosity.  --log-file FILE       Write logging info into this FILE,
+        as well as to                        stdout or stderr, if configured.  --log-stream
+        STREAM   Log messages to the specified STREAM. Valid values are                        stdout,
+        stderr, and none  --log-frmt FORMAT     The logging format-string. (see `logging.LogRecord`                        class
+        from standard python library)  --hash-algo HASH_ALGO                        Any
+        `hashlib` available algorithm to use for                        generating
+        fragments on package links. Can be disabled                        with one
+        of (0, no, off, false).  --backend {auto,simple-dir,cached-dir}                        A
+        backend implementation. Keep the default ''auto'' to                        automatically
+        determine whether to activate caching or                        not  --version             show
+        program''s version number and exit  -x, --execute         Execute the pip
+        commands rather than printing to                        stdout  -d DOWNLOAD_DIRECTORY,
+        --download-directory DOWNLOAD_DIRECTORY                        Specify a directory
+        where packages updates will be                        downloaded. The default
+        behavior is to use the                        directory which contains the
+        package being updated.  -u, --allow-unstable  Allow updating to unstable versions
+        (alpha, beta, rc,                        dev, etc.)  --blacklist-file IGNORELIST_FILE,
+        --ignorelist-file IGNORELIST_FILE                        Don''t update packages
+        listed in this file (one package                        name per line, without
+        versions, ''#'' comments                        honored). This can be useful
+        if you upload private                        packages into pypiserver, but
+        also keep a mirror of                        public packages that you regularly
+        update. Attempting                        to pull an update of a private package
+        from `pypi.org`                        might pose a security risk - e.g. a
+        malicious user                        might publish a higher version of the
+        private package,                        containing arbitrary code.```## Client-Side
+        ConfigurationsAlways specifying the pypi url on the command line is a bitcumbersome.
+        Since **pypiserver** redirects **pip/easy_install** to the**pypi.org** index
+        if it doesn''t have a requested package, it is agood idea to configure them
+        to always use your local pypi index.### Configuring pipFor **pip** command
+        this can be done by setting the environment variable**[PIP_EXTRA_INDEX_URL](https://packaging.python.org/en/latest/guides/hosting-your-own-index/)**
+        in your **.bashr/.profile/.zshrc**```shellexport PIP_EXTRA_INDEX_URL=http://localhost:8080/simple/```or
+        by adding the following lines to **~/.pip/pip.conf**```shell[global]extra-index-url
+        = http://localhost:8080/simple/```NoteIf you have installed **pypiserver**
+        on a remote url without *https*you will receive an "untrusted" warning from
+        *pip*, urging you to appendthe **--trusted-host** option.  You can also include
+        this option permanentlyin your configuration-files or environment variables.###
+        Configuring easy_installFor **easy_install** command you may set the following
+        configuration in**~/.pydistutils.cfg**```shell[easy_install]index_url = http://localhost:8080/simple/```###
+        Uploading Packages RemotelyInstead of copying packages directly to the server''s
+        folder (i.e. with **scp**),you may use python tools for the task, e.g. **python
+        setup.py upload**.In that case, **pypiserver** is responsible for authenticating
+        the upload-requests.NoteWe strongly advise to password-protected your uploads!It
+        is possible to disable authentication for uploads (e.g. in intranets).To avoid
+        lazy security decisions, read help for **-P** and **-a** options.#### Apache
+        Like Authentication (htpasswd)1. First make sure you have the **passlib**
+        module installed (note that   **passlib>=1.6** is required), which is needed
+        for parsing the Apache   *htpasswd* file specified by the **-P**, **--passwords**
+        option   (see next steps)```shell    pip install passlib```2. Create the Apache
+        **htpasswd** file with at least one user/password pair   with this command
+        (you''ll be prompted for a password)```shell    htpasswd -sc htpasswd.txt
+        <some_username>```TipRead this [SO](http://serverfault.com/questions/152950/how-to-create-and-edit-htaccess-and-htpasswd-locally-on-my-computer-and-then-u)
+        question for running `htpasswd` cmd under *Windows*or if you have bogus passwords
+        that you don''t care because they are foran internal service (which is still
+        "bad", from a security perspective...)you may use this [public service](http://www.htaccesstools.com/htpasswd-generator/)TipWhen
+        accessing pypiserver via the api, alternate authenticationmethods are available
+        via the **auther** config flag. Any callablereturning a boolean can be passed
+        through to the pypiserver config inorder to provide custom authentication.
+        For example, to configurepypiserver to authenticate using the [python-pam](https://pypi.org/project/python-pam/)```shell    import
+        pam    pypiserver.default_config(auther=pam.authenticate)```Please see `Using
+        Ad-hoc authentication providers`\_ for more information.3. You  need to restart
+        the server with the **-P** option only once   (but user/password pairs can
+        later be added or updated on the fly)```shell    ./pypi-server run -p 8080
+        -P htpasswd.txt ~/packages &```#### Upload with setuptools1. On client-side,
+        edit or create a **~/.pypirc** file with a similar content:```shell     [distutils]     index-servers
+        =       pypi       local     [pypi]     username:<your_pypi_username>     password:<your_pypi_passwd>     [local]     repository:
+        http://localhost:8080     username: <some_username>     password: <some_passwd>```2.
+        Then from within the directory of the python-project you wish to upload,   issue
+        this command:```shell     python setup.py sdist upload -r local```#### Upload
+        with twineTo avoid storing you passwords on disk, in clear text, you may either:-
+        use the **register** *setuptools*''s command with the **-r** option,  like
+        that```shell  python setup.py sdist register -r local upload -r local```-
+        use *twine* library, which  breaks the procedure in two steps.  In addition,
+        it supports signing  your files with PGP-Signatures and uploading the generated
+        *.asc* files  to **pypiserver**::```shell  twine upload -r local --sign -identity
+        user_name ./foo-1.zip```## Using the Docker ImageStarting with version 1.2.5,
+        official Docker images will be built for eachpush to master, each dev, alpha,
+        or beta release, and each final release.The most recent full release will
+        always be available under the tag **latest**,and the current master branch
+        will always be available under the tag**unstable**.You can always check to
+        see what tags are currently available at our[*Docker Repo*](https://hub.docker.com/r/pypiserver/pypiserver/tags/).To
+        run the most recent release of **pypiserver** with Docker, simply```shell    docker
+        run pypiserver/pypiserver:latest run```This starts **pypiserver** serving
+        packages from the **/data/packages**directory inside the container, listening
+        on the container port 8080.The container takes all the same arguments as the
+        normal **pypi-server**executable, with the exception of the internal container
+        port (**-p**),which will always be 8080.Of course, just running a container
+        isn''t that interesting. To mapport 80 on the host to port 8080 on the container::```shell    docker
+        run -p 80:8080 pypiserver/pypiserver:latest run```You can now access your
+        **pypiserver** at **localhost:80** in a web browser.To serve packages from
+        a directory on the host, e.g. **~/packages**```shell    docker run -p 80:8080
+        -v ~/packages:/data/packages pypiserver/pypiserver:latest run```To authenticate
+        against a local **.htpasswd** file::```shell    docker run -p 80:8080 -v ~/.htpasswd:/data/.htpasswd
+        pypiserver/pypiserver:latest run -P .htpasswd packages```You can also specify
+        **pypiserver** to run as a Docker service using acomposefile. An example composefile
+        is [provided](https://github.com/pypiserver/pypiserver/blob/master/docker-compose.yml)##
+        Alternative Installation MethodsWhen trying the methods below, first use the
+        following command to check whetherprevious versions of **pypiserver** already
+        exist, and (optionally) uninstall them::```shell# VERSION-CHECK: Fails if
+        not installed.pypi-server --version# UNINSTALL: Invoke again until it fails.pip
+        uninstall pypiserver```### Installing the Very Latest VersionIn case the latest
+        version in *pypi* is a pre-release, you have to use*pip*''s *--pre* option.  And
+        to update an existing installation combine itwith `--ignore-installed````shellpip
+        install pypiserver --pre -I```You can even install the latest **pypiserver**
+        directly from *github* with thefollowing command, assuming you have *git*
+        installed on your **PATH**```shellpip install git+git://github.com/pypiserver/pypiserver.git```##
+        Recipes### Managing the Package DirectoryThe **pypi-server** command has the
+        **update** command that searches for updates ofavailable packages. It scans
+        the package directory for availablepackages and searches on pypi.org for updates.
+        Without furtheroptions **pypi-server update** will just print a list of commands
+        which mustbe run in order to get the latest version of each package. Outputlooks
+        like```shell    $ ./pypi-server update     checking 106 packages for newer
+        version    .........u.e...........e..u.............    .....e..............................e...    ..........................    no
+        releases found on pypi for PyXML, Pymacs, mercurial, setuptools    # update
+        raven from 1.4.3 to 1.4.4    pip -q install --no-deps  --extra-index-url https://pypi.org/simple/
+        -d /home/ralf/packages/mirror raven==1.4.4    # update greenlet from 0.3.3
+        to 0.3.4    pip -q install --no-deps  --extra-index-url https://pypi.org/simple/
+        -d /home/ralf/packages/mirror greenlet==0.3.4```It first prints for each package
+        a single character after checking theavailable versions on pypi. A dot(.)
+        means the package is up-to-date, **''u''**means the package can be updated
+        and **''e''** means the list of releases onpypi is empty. After that it shows
+        a *pip* command line which can be usedto update a one package. Either copy
+        and paste that or run**pypi-server update -x** in order to really execute
+        those commands. You needto have *pip* installed for that to work however.Specifying
+        an additional **-u** option will also allow alpha, beta andrelease candidates
+        to be downloaded. Without this option thesereleases won''t be considered.###
+        Serving Thousands of PackagesBy default, **pypiserver** scans the entire packages
+        directory each time anincoming HTTP request occurs. This isn''t a problem
+        for a small number ofpackages, but causes noticeable slow-downs when serving
+        thousands of packages.If you run into this problem, significant speedups can
+        be gained by enablingpypiserver''s directory caching functionality. The only
+        requirement is toinstall the **watchdog** package, or it can be installed
+        during **pypiserver**installation, by specifying the **cache** extras option::```shell    pip
+        install pypiserver[cache]```Additional speedups can be obtained by using your
+        webserver''s builtincaching functionality. For example, if you are using `nginx`
+        as areverse-proxy as described below in `Behind a reverse proxy`, you caneasily
+        enable caching. For example, to allow nginx to cache up to10 gigabytes of
+        data for up to 1 hour::```shell    proxy_cache_path /data/nginx/cache                     levels=1:2                     keys_zone=pypiserver_cache:10m                     max_size=10g                     inactive=60m                     use_temp_path=off;    server
+        {        # ...        location / {            proxy_cache pypiserver_cache;            proxy_pass
+        http://localhost:8080;        }    }```Using webserver caching is especially
+        helpful if you have high requestvolume. Using nginx caching, a real-world
+        pypiserver installation wasable to easily support over 1000 package downloads/min
+        at peak load.### Managing Automated StartupThere are a variety of options
+        for handling the automated starting ofpypiserver upon system startup. Two
+        of the most common are *systemd* and*supervisor* for linux systems. For windows
+        creating services with scripts isn''tan easy task without a third party tool
+        such as *NSSM*.#### Running As a systemd Service**systemd** is installed by
+        default on most modern Linux systems and as such,it is an excellent option
+        for managing the pypiserver process. An exampleconfig file for **systemd**
+        can be seen below```shell    [Unit]    Description=A minimal PyPI server for
+        use with pip/easy_install.    After=network.target    [Service]    Type=simple    #
+        systemd requires absolute path here too.    PIDFile=/var/run/pypiserver.pid    User=www-data    Group=www-data    ExecStart=/usr/local/bin/pypi-server
+        run -p 8080 -a update,download --log-file /var/log/pypiserver.log -P /etc/nginx/.htpasswd
+        /var/www/pypi    ExecStop=/bin/kill -TERM $MAINPID    ExecReload=/bin/kill
+        -HUP $MAINPID    Restart=always    WorkingDirectory=/var/www/pypi    TimeoutStartSec=3    RestartSec=5    [Install]    WantedBy=multi-user.target```Adjusting
+        the paths and adding this file as **pypiserver.service** into your**systemd/system**
+        directory will allow management of the pypiserver process with**systemctl**,
+        e.g. **systemctl start pypiserver**.More useful information about *systemd*
+        can be found athttps://www.digitalocean.com/community/tutorials/how-to-use-systemctl-to-manage-systemd-services-and-units####
+        Launching through supervisor[supervisor](http://supervisord.org/) has the
+        benefit of being a pure pythonpackage and as such, it provides excellent cross-platform
+        support for processmanagement. An example configuration file for **supervisor**
+        is given below```shell    [program:pypi]    command=/home/pypi/pypi-venv/bin/pypi-server
+        run -p 7001 -P /home/pypi/.htpasswd /home/pypi/packages    directory=/home/pypi    user=pypi    autostart=true    autorestart=true    stderr_logfile=/var/log/pypiserver.err.log    stdout_logfile=/var/log/pypiserver.out.log```From
+        there, the process can be managed via **supervisord** using **supervisorctl**.####
+        Running As a service with NSSMFor Windows download NSSM from https://nssm.cc
+        unzip to a desired location such as Program Files. Decide whether you are
+        goingto use win32 or win64, and add that exe to environment PATH.Create a
+        start_pypiserver.bat```shell    pypi-server run -p 8080 C:\Path\To\Packages
+        &```Test the batch file by running it first before creating the service. Make
+        sure you can accessthe server remotely, and install packages. If you can,
+        proceed, if not troubleshoot until you can.This will ensure you know the server
+        works, before adding NSSM into the mix.From the command prompt```shell    nssm
+        install pypiserver```This command will launch a NSSM gui application```shell    Path:
+        C:\Path\To\start_pypiserver.bat    Startup directory: Auto generates when
+        selecting path    Service name: pypiserver```There are more tabs, but that
+        is the basic setup. If the service needs to be running with a certainlogin
+        credentials, make sure you enter those credentials in the logon tab.Start
+        the service```shell    nssm start pypiserver```Other useful commands```shell    nssm
+        --help    nssm stop <servicename>    nssm restart <servicename>    nssm status
+        <servicename>```For detailed information please visit https://nssm.cc### Using
+        a Different WSGI Server- The **bottle** web-server which supports many WSGI-servers,
+        among others,  **paste**, **cherrypy**, **twisted** and **wsgiref** (part
+        of Python); you select  them using the **--server** flag.- You may view all
+        supported WSGI servers using the following interactive code```python    >>>
+        from pypiserver import bottle    >>> list(bottle.server_names.keys())    [''cgi'',
+        ''gunicorn'', ''cherrypy'', ''eventlet'', ''tornado'', ''geventSocketIO'',   ''rocket'',
+        ''diesel'', ''twisted'', ''wsgiref'', ''fapws3'', ''bjoern'', ''gevent'',   ''meinheld'',
+        ''auto'', ''aiohttp'', ''flup'', ''gae'', ''paste'', ''waitress'']```- If
+        none of the above servers matches your needs, invoke just the  **pypiserver:app()**
+        method which returns the internal WSGI-app WITHOUT  starting-up a server -
+        you may then send it to any WSGI server you like.  Read also the [Utilizing
+        the API](#utilizing-the-api) section.- Some examples are given below - you
+        may find more details in [bottle  site](http://bottlepy.org/docs/dev/deployment.html#switching-the-server-backend%3E).####
+        ApacheTo use your *Apache2* with **pypiserver**, prefer to utilize **mod_wsgi**
+        asexplained in [bottle''s documentation](http://bottlepy.org/docs/dev/deployment.html#apache-mod-wsgi%3E).NoteIf
+        you choose instead to go with **mod_proxy**, mind that you may bump into problemswith
+        the prefix-path (see [#155](https://github.com/pypiserver/pypiserver/issues/155%3E)).1.
+        Adapt and place the following *Apache* configuration either into top-level
+        scope,   or inside some **<VirtualHost>** (contributed by Thomas Waldmann):```shell        WSGIScriptAlias   /     /yoursite/wsgi/pypiserver-wsgi.py        WSGIDaemonProcess       pypisrv
+        user=pypisrv group=pypisrv umask=0007 \                                processes=1
+        threads=5 maximum-requests=500 \                                display-name=wsgi-pypisrv
+        inactivity-timeout=300        WSGIProcessGroup        pypisrv        WSGIPassAuthorization
+        On    # Required for authentication (https://github.com/pypiserver/pypiserver/issues/288)        <Directory
+        /yoursite/wsgi >            Require all granted        </Directory>```or if
+        using older **Apache \< 2.4**, substitute the last part with this::```shell        <Directory
+        /yoursite/wsgi >            Order deny,allow            Allow from all        </Directory>```2.
+        Then create the **/yoursite/cfg/pypiserver.wsgi** file and make sure that   the
+        **user** and **group** of the **WSGIDaemonProcess** directive   (**pypisrv:pypisrv**
+        in the example) have the read permission on it```python        import pypiserver        conf
+        = pypiserver.default_config(            root =          "/yoursite/packages",            password_file
+        = "/yoursite/htpasswd", )        application = pypiserver.app(**conf)```TipIf
+        you have installed **pypiserver** in a virtualenv, follow **mod_wsgi**''s[instructions](http://modwsgi.readthedocs.io/en/develop/user-guides/virtual-environments.html)and
+        prepend the python code above with the following```python    import site    site.addsitedir(''/yoursite/venv/lib/pythonX.X/site-packages'')```NoteFor
+        security reasons, notice that the **Directory** directive grants accessto
+        a directory holding the **wsgi** start-up script, alone; nothing else.NoteTo
+        enable HTTPS support on Apache, configure the directive that contains theWSGI
+        configuration to use SSL.#### gunicornThe following command uses **gunicorn**
+        to start **pypiserver**```shell  gunicorn -w4 ''pypiserver:app(root="/home/ralf/packages")''```or
+        when using multiple roots```shell  gunicorn -w4 ''pypiserver:app(root=["/home/ralf/packages",
+        "/home/ralf/experimental"])''```#### paste[paste](http://pythonpaste.org)
+        allows to run multiple WSGI applicationsunder different URL paths. Therefore,
+        it is possible to serve different setof packages on different paths.The following
+        example **paste.ini** could be used to serve stable andunstable packages on
+        different paths```shell    [composite:main]    use = egg:Paste#urlmap    /unstable/
+        = unstable    / = stable    [app:stable]    use = egg:pypiserver#main    root
+        = ~/stable-packages    [app:unstable]    use = egg:pypiserver#main    root
+        = ~/stable-packages       ~/unstable-packages    [server:main]    use = egg:gunicorn#main    host
+        = 0.0.0.0    port = 9000    workers = 5    accesslog = -```NoteYou need to
+        install some more dependencies for this to work, like::```shell  pip install
+        paste pastedeploy gunicorn pypiserver```The server can then start with```shell  gunicorn_paster
+        paste.ini```### Behind a Reverse ProxyYou can run **pypiserver** behind a
+        reverse proxy as well.#### NginxExtend your nginx configuration```shell    upstream
+        pypi {      server              pypiserver.example.com:12345 fail_timeout=0;    }    server
+        {      server_name         myproxy.example.com;      location / {        proxy_set_header  Host
+        $host:$server_port;        proxy_set_header  X-Forwarded-Proto $scheme;        proxy_set_header  X-Real-IP
+        $remote_addr;        proxy_pass        http://pypi;      }    }```As of pypiserver
+        1.3, you may also use the `X-Forwarded-Host` header in yourreverse proxy config
+        to enable changing the base URL. For example if youwant to host pypiserver
+        under a particular path on your server```shell    upstream pypi {      server              localhost:8000;    }    server
+        {      location /pypi/ {          proxy_set_header  X-Forwarded-Host $host:$server_port/pypi;          proxy_set_header  X-Forwarded-Proto
+        $scheme;          proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;          proxy_set_header  X-Real-IP
+        $remote_addr;          proxy_pass        http://pypi;      }    }```#### Supporting
+        HTTPSUsing a reverse proxy is the preferred way of getting pypiserver behindHTTPS.
+        For example, to put pypiserver behind HTTPS on port 443, withautomatic HTTP
+        redirection, using `nginx````shell    upstream pypi {      server               localhost:8000;    }    server
+        {      listen              80 default_server;      server_name         _;      return              301
+        https://$host$request_uri;    }    server {      listen              443 ssl;      server_name         pypiserver.example.com;      ssl_certificate     /etc/star.example.com.crt;      ssl_certificate_key
+        /etc/star.example.com.key;      ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;      ssl_ciphers         HIGH:!aNULL:!MD5;      location
+        / {        proxy_set_header  Host $host:$server_port;        proxy_set_header  X-Forwarded-Proto
+        $scheme;        proxy_set_header  X-Real-IP $remote_addr;        proxy_pass        http://pypi;      }    }```Please
+        see [nginx''s HTTPS docs for more details](http://nginx.org/en/docs/http/configuring_https_servers.html).Getting
+        and keeping your certificates up-to-date can be simplified using,for example,
+        using [certbot and letsencrypt](https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-18-04%3E).####
+        TraefikIt is also possible to use [Traefik](https://docs.traefik.io/) to put
+        pypiserver behind HTTPS on port 443, withautomatic HTTP redirection using
+        Docker Compose. Please see the provided [docker-compose.yml](https://github.com/pypiserver/pypiserver/blob/master/docker-compose.yml)
+        example for more information.### Utilizing the APIIn order to enable ad-hoc
+        authentication-providers or to use WSGI-serversnot supported by *bottle* out-of-the-box,
+        you needed to launch **pypiserver**via its API.- The main entry-point for
+        configuring **pypiserver** is the [pypiserver:app()](https://github.com/pypiserver/pypiserver/blob/master/pypiserver/__init__.py#L116)  function.  This
+        function returns the internal WSGI-app that you my then  send to any WSGI-server
+        you like.- To get all **pypiserver:app()** keywords and their explanations,
+        read the  function [pypiserver:default_config()](https://github.com/pypiserver/pypiserver/blob/master/pypiserver/__init__.py#L35)-
+        Finally, to fire-up a WSGI-server with the configured app, invoke  the **bottle:run(app,
+        host, port, server)** function.  Note that **pypiserver** ships with its own
+        copy of *bottle*; to use it,  import it like that: **from pypiserver import
+        bottle**#### Using Ad-Hoc Authentication ProvidersThe **auther** keyword of
+        **pypiserver:app()** function maybe set only usingthe API. This can be any
+        callable that returns a boolean when passedthe *username* and the *password*
+        for a given request.For example, to authenticate users based on the **/etc/passwd**
+        file under Unix,you may delegate such decisions to the [python-pam](https://pypi.org/project/python-pam/)
+        library by followingthese steps:1. Ensure **python-pam** module is installed   pip
+        install python-pam1. Create a python-script along these lines```shell   $
+        cat > pypiserver-start.py   import pypiserver   from pypiserver import bottle   import
+        pam   app = pypiserver.app(root=''./packages'', auther=pam.authenticate)   bottle.run(app=app,
+        host=''0.0.0.0'', port=80, server=''auto'')   [Ctrl+ D]```3. Invoke the python-script
+        to start-up **pypiserver**```shell   $ python pypiserver-start.py```NoteThe
+        [python-pam](https://pypi.org/project/python-pam/) module, requires *read*
+        access to **/etc/shadow** file;you may add the user under which **pypiserver**
+        runs into the *shadow*group, with a command like this: **sudo usermod -a -G
+        shadow pypy-user**.### Use with MicroPythonThe MicroPython interpreter for
+        embedded devices can install packages with themodule **upip.py**. The module
+        uses a specialized json-endpoint to retrievepackage information. This endpoint
+        is supported by **pypiserver**.It can be tested with the UNIX port of **micropython**```shell    cd
+        micropython    ports/unix/micropython -m tools.upip install -i http://my-server:8080
+        -p /tmp/mymodules micropython-foobar```Installing packages from the REPL of
+        an embedded device works in this way:```python    import network    import
+        upip    sta_if = network.WLAN(network.STA_IF)    sta_if.active(True)    sta_if.connect(''<your
+        ESSID>'', ''<your password>'')    upip.index_urls = ["http://my-server:8080"]    upip.install("micropython-foobar")```Further
+        information on micropython-packaging can be found here: https://docs.micropython.org/en/latest/reference/packages.html###
+        Custom Health Check Endpoint**pypiserver** provides a default health endpoint
+        at **/health**. It always returns**200 Ok** if the service is up. Otherwise,
+        it means that the service is not responsive.In addition, **pypiserver** allows
+        users to customize the health endpoint.Alphanumeric characters, hyphens, forward
+        slashes and underscores are allowedand the endpoint should not overlap with
+        any existing routes.Valid examples: **/healthz**, **/health/live-1**, **/api_health**,
+        **/action/health**#### Configure a custom health endpoint by CLI argumentsRun
+        pypiserver with **--health-endpoint** argument:```shell    pypi-server run
+        --health-endpoint /action/health```#### Configure a custom health endpoint
+        by script````python    import pypiserver    from pypiserver import bottle    app
+        = pypiserver.app(root="./packages", health_endpoint="/action/health")    bottle.run(app=app,
+        host="```python    import pypiserver    from pypiserver import bottle    app
+        = pypiserver.app(root="./packages", health_endpoint="/action/health")    bottle.run(app=app,
+        host="0.0.0.0", port=8080, server="auto")````Try **curl http://localhost:8080/action/health**##
+        SourcesTo create a copy of the repository, use```shell    git clone https://github.com/pypiserver/pypiserver.git    cd
+        pypiserver```To receive any later changes, in the above folder use:```shell    git
+        pull```## Known Limitations**pypiserver** does not implement the full API
+        as seen on [PyPI](https://pypi.org/). Itimplements just enough to make **easy_install**,
+        **pip install**, and**search** work.The following limitations are known:-
+        Command **pypi -U** that compares uploaded packages with *pypi* to see if  they
+        are outdated, does not respect a http-proxy environment variable  (see [#19](https://github.com/pypiserver/pypiserver/issues/19).-
+        It accepts documentation uploads but does not save them to  disk (see [#47](https://github.com/pypiserver/pypiserver/issues/47)
+        for a  discussion)- It does not handle misspelled packages as *pypi-repo*
+        does,  therefore it is suggested to use it with **--extra-index-url** instead  of
+        **--index-url** (see [#38](https://github.com/pypiserver/pypiserver/issues/38%3E)).Please
+        use Github''s [bugtracker](https://github.com/pypiserver/pypiserver/issues%3E)for
+        other bugs you find.## Similar ProjectsThere are lots of other projects, which
+        allow you to run your ownPyPI server. If **pypiserver** doesn''t work for
+        you, the following areamong the most popular alternatives:- [devpi-server](https://pypi.org/project/devpi/):  a
+        reliable fast pypi.org caching server, part of  the comprehensive [github-style
+        pypi index server and packaging meta tool](https://pypi.org/project/devpi/).  (version:
+        2.1.4, access date: 8/3/2015)- Check this SO question: [How to roll my own
+        pypi](http://stackoverflow.com/questions/1235331/how-to-roll-my-own-pypi)###
+        Unmaintained or archivedThese projects were once alternatives to pypiserver
+        but are now either unmaintained or archived.- [pip2pi](https://github.com/wolever/pip2pi)  a
+        simple cmd-line tool that builds a PyPI-compatible local folder from pip requirements-
+        [flask-pypi-proxy](http://flask-pypi-proxy.readthedocs.org/)  A proxy for
+        PyPI that also enables uploading custom packages.## Related SoftwareThough
+        not direct alternatives for **pypiserver**''s use as an indexserver, the following
+        is a list of related software projects that youmay want to familiarize with:-
+        [pypi-uploader](https://pypi.org/project/pypi-uploader/):  A command-line
+        utility to upload packages to your **pypiserver** from pypi without  having
+        to store them locally first.- [twine](https://pypi.org/project/twine/):  A
+        command-line utility for interacting with PyPI or **pypiserver**.- [warehouse](https://github.com/pypa/warehouse/):  the
+        software that powers [PyPI](https://pypi.org/) itself. It is not generally
+        intended to  be run by end-users.# Licensing**pypiserver** contains a copy
+        of [bottle](http://bottlepy.org/) which is available under theMIT license,
+        and the remaining part is distributed under the zlib/libpng license.See the
+        **LICENSE.txt** file.'
+      Package: pypiserver
+      Source: pip
+      Version: 2.0.1
+      Hash: ''
+      licenses:
+      - MIT
+      - ZPL-2.1
+      - Zlib
+      Title: pypiserver
+      DownloadURL: https://files.pythonhosted.org/packages/ec/62/e3d6dd620f53a94eae24f7bc72c051090e8acbf6da9a79d7b878f8284a28/pypiserver-2.0.1.zip
+  bazaar:
+    register: 'no'
+    prim: 4/CTX1028540
+    community_link: https://github.com/pypiserver/pypiserver
+    community_name: https://github.com/pypiserver/pypiserver
+    community_url: https://github.com/pypiserver/pypiserver
+    component_comment: ''
+    component_highlevel_description: Minimal PyPI server for uploading & downloading
+      packages with pip/easy_install
+    component_name: pypiserver
+    component_platform: linux
+    component_programing_language: Python
+    component_version: V2.0.1
+    licenses:
+    - FAL1159008 (MIT License (MIT))
+    src_download_link: https://github.com/pypiserver/pypiserver/archive/refs/tags/v2.0.1.tar.gz
+    stako_decision_reason: automatic
+    stako: ESW2
+    stako_comment: ''
+    bazaarurl: https://scas.internal.ericsson.com/search3pp?id=1064920&id-filter=equals&rowDisplay=Card-Simple
+    recode: ''
+    retext: ''
+    country: Germany
+    crypto: No Encryption
+    programming_language: Python
+  encryptions:
+    used:
+    - ''
+  evms:
+    register: 'yes'
+    product_name: pypiserver
+    target_sw: linux
+    vendor: pip
+    version: 2.0.1
+    web_url: https://github.com/pypiserver/pypiserver
+  licenses:
+  - MIT
+  - ZPL-2.1
+  - Zlib
+  name: pypiserver
+  primary:
+  - this
+  subcomponent: false
+  type: FOSS
+  versions:
+  - 2.0.1
+  mimer:
+    linking: Static
+    product_number: CTX1028540
+    product_version_label: v2.0.1
+    selected_licenses:
+    - MIT
+    obligation: Including the full license text in a prominent place with the software
+      when the FOSS is distributed
+    usage: Use as is
+    primary: 'True'
+  alerts:
+  - Stako is 'ESW4', BAZAAR/SCAS component is not recommended to be used
+- ID: waitress+2.1.2
+  additional_info:
+    fossa-attribution:
+      Description: 'Waitress========.. image:: https://img.shields.io/pypi/v/waitress.svg    :target:
+        https://pypi.org/project/waitress/    :alt: latest version of waitress on
+        PyPI.. image:: https://github.com/Pylons/waitress/workflows/Build%20and%20test/badge.svg    :target:
+        https://github.com/Pylons/waitress/actions?query=workflow%3A%22Build+and+test%22..
+        image:: https://readthedocs.org/projects/waitress/badge/?version=master        :target:
+        https://docs.pylonsproject.org/projects/waitress/en/master        :alt: master
+        Documentation Status.. image:: https://img.shields.io/badge/irc-freenode-blue.svg        :target:
+        https://webchat.freenode.net/?channels=pyramid        :alt: IRC FreenodeWaitress
+        is a production-quality pure-Python WSGI server with very acceptableperformance.
+        It has no dependencies except ones which live in the Pythonstandard library.
+        It runs on CPython on Unix and Windows under Python 3.7+. Itis also known
+        to run on PyPy 3 (version 3.7 compatible python) on UNIX. Itsupports HTTP/1.0
+        and HTTP/1.1.For more information, see the "docs" directory of the Waitress
+        package or visithttps://docs.pylonsproject.org/projects/waitress/en/latest/2.1.2-----Bugfix~~~~~~-
+        When expose_tracebacks is enabled waitress would fail to properly encode  unicode
+        thereby causing another error during error handling. See  https://github.com/Pylons/waitress/pull/378-
+        Header length checking had a calculation that was done incorrectly when the  data
+        was received across multple socket reads. This calculation has been  corrected,
+        and no longer will Waitress send back a 413 Request Entity Too  Large. See
+        https://github.com/Pylons/waitress/pull/376Security Bugfix~~~~~~~~~~~~~~~-
+        in 2.1.0 a new feature was introduced that allowed the WSGI thread to start  sending
+        data to the socket. However this introduced a race condition whereby  a socket
+        may be closed in the sending thread while the main thread is about  to call
+        select() therey causing the entire application to be taken down.  Waitress
+        will no longer close the socket in the WSGI thread, instead waking  up the
+        main thread to cleanup. See https://github.com/Pylons/waitress/pull/3772.1.1-----Security
+        Bugfix~~~~~~~~~~~~~~~- Waitress now validates that chunked encoding extensions
+        are valid, and don''t  contain invalid characters that are not allowed. They
+        are still skipped/not  processed, but if they contain invalid data we no longer
+        continue in and  return a 400 Bad Request. This stops potential HTTP desync/HTTP
+        request  smuggling. Thanks to Zhang Zeyu for reporting this issue. See  https://github.com/Pylons/waitress/security/advisories/GHSA-4f7p-27jc-3c36-
+        Waitress now validates that the chunk length is only valid hex digits when  parsing
+        chunked encoding, and values such as ``0x01`` and ``+01`` are no  longer supported.
+        This stops potential HTTP desync/HTTP request smuggling.  Thanks to Zhang
+        Zeyu for reporting this issue. See  https://github.com/Pylons/waitress/security/advisories/GHSA-4f7p-27jc-3c36-
+        Waitress now validates that the Content-Length sent by a remote contains only  digits
+        in accordance with RFC7230 and will return a 400 Bad Request when the  Content-Length
+        header contains invalid data, such as ``+10`` which would  previously get
+        parsed as ``10`` and accepted. This stops potential HTTP  desync/HTTP request
+        smuggling Thanks to Zhang Zeyu for reporting this issue. See  https://github.com/Pylons/waitress/security/advisories/GHSA-4f7p-27jc-3c362.1.0-----Python
+        Version Support~~~~~~~~~~~~~~~~~~~~~~- Python 3.6 is no longer supported by
+        Waitress- Python 3.10 is fully supported by WaitressBugfix~~~~~~- ``wsgi.file_wrapper``
+        now sets the ``seekable``, ``seek``, and ``tell``  attributes from the underlying
+        file if the underlying file is seekable. This  allows WSGI middleware to implement
+        things like range requests for example  See https://github.com/Pylons/waitress/issues/359
+        and  https://github.com/Pylons/waitress/pull/363- In Python 3 ``OSError``
+        is no longer subscriptable, this caused failures on  Windows attempting to
+        loop to find an socket that would work for use in the  trigger.  See https://github.com/Pylons/waitress/pull/361-
+        Fixed an issue whereby ``BytesIO`` objects were not properly closed, and  thereby
+        would not get cleaned up until garbage collection would get around to  it.  This
+        led to potential for random memory spikes/memory issues, see  https://github.com/Pylons/waitress/pull/358
+        and  https://github.com/Pylons/waitress/issues/357 .  With thanks to Florian
+        Schulze for testing/vaidating this fix!Features~~~~~~~~- When the WSGI app
+        starts sending data to the output buffer, we now attempt to  send data directly
+        to the socket. This avoids needing to wake up the main  thread to start sending
+        data. Allowing faster transmission of the first byte.  See https://github.com/Pylons/waitress/pull/364  With
+        thanks to Michael Merickel for being a great rubber ducky!- Add REQUEST_URI
+        to the WSGI environment.  REQUEST_URI is similar to ``request_uri`` in nginx.
+        It is a string that  contains the request path before separating the query
+        string and  decoding ``%``-escaped characters. '
+      Package: waitress
+      Source: pip
+      Version: 2.1.2
+      Hash: ''
+      licenses:
+      - HPND
+      - Repoze
+      - ZPL-2.1
+      Title: waitress
+      DownloadURL: https://files.pythonhosted.org/packages/72/83/c3de9799e2305898b02ea67bcd125ad06f271e2a82cc86fe66b7bf4e6f63/waitress-2.1.2.tar.gz
+  bazaar:
+    register: 'no'
+    prim: 12/CAX1057067
+    community_link: https://github.com/Pylons/waitress
+    community_name: https://github.com/Pylons/waitress
+    community_url: https://github.com/Pylons/waitress
+    component_comment: ''
+    component_highlevel_description: Waitress is meant to be a production-quality
+      pure-Python WSGI server with very acceptable performance. It has no dependencies
+      except ones which live in the Python standard library
+    component_name: waitress Pylons Project
+    component_platform: linux
+    component_programing_language: Python
+    component_version: 2.1.2
+    licenses:
+    - FAL1159237/20 (Zope Public License 2.0 (ZPL-2.0))
+    src_download_link: https://github.com/Pylons/waitress/archive/v2.1.2.tar.gz
+    stako_decision_reason: allowed
+    stako: ESW3
+    stako_comment: Product version is older than 18 months
+    bazaarurl: https://scas.internal.ericsson.com/search3pp?id=1015940&id-filter=equals&rowDisplay=Card-Simple
+    recode: ''
+    retext: ''
+    country: United States
+    crypto: No Encryption
+    programming_language: Python
+  encryptions:
+    used:
+    - ''
+  evms:
+    register: 'yes'
+    product_name: waitress
+    target_sw: linux
+    vendor: pip
+    version: 2.1.2
+    web_url: https://github.com/Pylons/waitress
+  licenses:
+  - HPND
+  - Repoze
+  - ZPL-2.1
+  name: waitress
+  primary:
+  - this
+  subcomponent: false
+  type: FOSS
+  versions:
+  - 2.1.2
+  mimer:
+    linking: Static
+    product_number: CAX1057067
+    product_version_label: v2.1.2
+    selected_licenses:
+    - ZPL-2.0
+    obligation: Including the full license text in a prominent place with the software
+      when the FOSS is distributed
+    usage: Use as is
+    primary: 'True'
+  alerts:
+  - Stako is 'ESW3', BAZAAR/SCAS component is not recommended to be used
+  - '''waitress Pylons Project'': Manual set stako_decision_reason: ''allowed'' for
+    stako: ''ESW3'', team takes the risk!'
+- ID: watchdog+3.0.0
+  additional_info:
+    fossa-attribution:
+      Description: "Watchdog========|Build Status||CirrusCI Status|Python API and
+        shell utilities to monitor file system events.Works on 3.7+.Example API Usage-----------------A
+        simple program that uses watchdog to monitor directories specifiedas command-line
+        arguments and logs events generated:.. code-block:: python    import sys    import
+        time    import logging    from watchdog.observers import Observer    from
+        watchdog.events import LoggingEventHandler    if __name__ == \"__main__\":
+        \       logging.basicConfig(level=logging.INFO,                            format='%(asctime)s
+        - %(message)s',                            datefmt='%Y-%m-%d %H:%M:%S')        path
+        = sys.argv[1] if len(sys.argv) > 1 else '.'        event_handler = LoggingEventHandler()
+        \       observer = Observer()        observer.schedule(event_handler, path,
+        recursive=True)        observer.start()        try:            while True:
+        \               time.sleep(1)        finally:            observer.stop()            observer.join()Shell
+        Utilities---------------Watchdog comes with an *optional* utility script called
+        ``watchmedo``.Please type ``watchmedo --help`` at the shell prompt toknow
+        more about this tool.Here is how you can log the current directory recursivelyfor
+        events related only to ``*.py`` and ``*.txt`` files whileignoring all directory
+        events:.. code-block:: bash    watchmedo log \\        --patterns=\"*.py;*.txt\"
+        \\        --ignore-directories \\        --recursive \\        --verbose \\
+        \       .You can use the ``shell-command`` subcommand to execute shell commands
+        inresponse to events:.. code-block:: bash    watchmedo shell-command \\        --patterns=\"*.py;*.txt\"
+        \\        --recursive \\        --command='echo \"${watch_src_path}\"' \\
+        \       .Please see the help information for these commands by typing:.. code-block::
+        bash    watchmedo [command] --helpAbout ``watchmedo`` Tricks~~~~~~~~~~~~~~~~~~~~~~~~~~``watchmedo``
+        can read ``tricks.yaml`` files and execute tricks within them inresponse to
+        file system events. Tricks are actually event handlers thatsubclass ``watchdog.tricks.Trick``
+        and are written by plugin authors. Trickclasses are augmented with a few additional
+        features that regular event handlersdon't need.An example ``tricks.yaml``
+        file:.. code-block:: yaml    tricks:    - watchdog.tricks.LoggerTrick:        patterns:
+        [\"*.py\", \"*.js\"]    - watchmedo_webtricks.GoogleClosureTrick:        patterns:
+        ['*.js']        hash_names: true        mappings_format: json                  #
+        json|yaml|python        mappings_module: app/javascript_mappings        suffix:
+        .min.js        compilation_level: advanced            # simple|advanced        source_directory:
+        app/static/js/        destination_directory: app/public/js/        files:
+        \         index-page:          - app/static/js/vendor/jquery*.js          -
+        app/static/js/base.js          - app/static/js/index-page.js          about-page:
+        \         - app/static/js/vendor/jquery*.js          - app/static/js/base.js
+        \         - app/static/js/about-page/**/*.jsThe directory containing the ``tricks.yaml``
+        file will be monitored. Each trickclass is initialized with its corresponding
+        keys in the ``tricks.yaml`` file asarguments and events are fed to an instance
+        of this class as they arrive.Installation------------Install from PyPI using
+        ``pip``:.. code-block:: bash    $ python -m pip install -U watchdog    # or
+        to install the watchmedo utility:    $ python -m pip install -U \"watchdog[watchmedo]\"Install
+        from source:.. code-block:: bash    $ python -m pip install -e .    # or to
+        install the watchmedo utility:    $ python -m pip install -e \".[watchmedo]\"Documentation-------------You
+        can browse the latest release documentation_ online.Contribute----------Fork
+        the `repository`_ on GitHub and send a pull request, or file an issueticket
+        at the `issue tracker`_. For general help and questions use`stackoverflow`_
+        with tag `python-watchdog`.Create and activate your virtual environment, then::
+        \   python -m pip install pytest pytest-cov    python -m pip install -e \".[watchmedo]\"
+        \   python -m pytest testsIf you are making a substantial change, add an entry
+        to the \"Unreleased\" sectionof the `changelog`_.Supported Platforms-------------------*
+        Linux 2.6 (inotify)* macOS (FSEvents, kqueue)* FreeBSD/BSD (kqueue)* Windows
+        (ReadDirectoryChangesW with I/O completion ports;  ReadDirectoryChangesW worker
+        threads)* OS-independent (polling the disk for directory snapshots and comparing
+        them  periodically; slow and not recommended)Note that when using watchdog
+        with kqueue, you need thenumber of file descriptors allowed to be opened by
+        programsrunning on your system to be increased to more than thenumber of files
+        that you will be monitoring. The easiest wayto do that is to edit your ``~/.profile``
+        file and adda line similar to::    ulimit -n 1024This is an inherent problem
+        with kqueue because it usesfile descriptors to monitor files. That plus the
+        enormousamount of bookkeeping that watchdog needs to do in orderto monitor
+        file descriptors just makes this a painful wayto monitor files and directories.
+        In essence, kqueue isnot a very scalable way to monitor a deeply nesteddirectory
+        of files and directories with a large number offiles.About using watchdog
+        with editors like Vim------------------------------------------Vim does not
+        modify files unless directed to do so.It creates backup files and then swaps
+        them in to replacethe files you are editing on the disk. This means thatif
+        you use Vim to edit your files, the on-modified eventsfor those files will
+        not be triggered by watchdog.You may need to configure Vim appropriately to
+        disablethis feature.About using watchdog with CIFS------------------------------When
+        you want to watch changes in CIFS, you need to explicitly tell watchdog touse
+        ``PollingObserver``, that is, instead of letting watchdog decide anappropriate
+        observer like in the example above, do::    from watchdog.observers.polling
+        import PollingObserver as ObserverDependencies------------1. Python 3.7 or
+        above.2. XCode_ (only on macOS when installing from sources)3. PyYAML_ (only
+        for ``watchmedo``)Licensing---------Watchdog is licensed under the terms of
+        the `Apache License, version 2.0`_.Copyright 2011 `Yesudeep Mangalapilly`_.Copyright
+        2012 Google, Inc & contributors.Project `source code`_ is available at Github.
+        Please report bugs and fileenhancement requests at the `issue tracker`_.Why
+        Watchdog?-------------Too many people tried to do the same thing and none
+        did what I needed Pythonto do:* pnotify_* `unison fsmonitor`_* fsmonitor_*
+        guard_* pyinotify_* `inotify-tools`_* jnotify_* treewatcher_* `file.monitor`_*
+        pyfilesystem_.. links:.. _Yesudeep Mangalapilly: yesudeep@gmail.com.. _source
+        code: https://github.com/gorakhargosh/watchdog.. _issue tracker: https://github.com/gorakhargosh/watchdog/issues..
+        _Apache License, version 2.0: https://www.apache.org/licenses/LICENSE-2.0..
+        _documentation: https://python-watchdog.readthedocs.io/.. _stackoverflow:
+        https://stackoverflow.com/questions/tagged/python-watchdog.. _repository:
+        https://github.com/gorakhargosh/watchdog.. _issue tracker: https://github.com/gorakhargosh/watchdog/issues..
+        _changelog: https://github.com/gorakhargosh/watchdog/blob/master/changelog.rst..
+        _PyYAML: https://www.pyyaml.org/.. _XCode: https://developer.apple.com/technologies/tools/xcode.html..
+        _pnotify: http://mark.heily.com/pnotify.. _unison fsmonitor: https://webdav.seas.upenn.edu/viewvc/unison/trunk/src/fsmonitor.py?view=markup&pathrev=471..
+        _fsmonitor: https://github.com/shaurz/fsmonitor.. _guard: https://github.com/guard/guard..
+        _pyinotify: https://github.com/seb-m/pyinotify.. _inotify-tools: https://github.com/rvoicilas/inotify-tools..
+        _jnotify: http://jnotify.sourceforge.net/.. _treewatcher: https://github.com/jbd/treewatcher..
+        _file.monitor: https://github.com/pke/file.monitor.. _pyfilesystem: https://github.com/PyFilesystem/pyfilesystem..
+        |Build Status| image:: https://github.com/gorakhargosh/watchdog/workflows/Tests/badge.svg
+        \  :target: https://github.com/gorakhargosh/watchdog/actions?query=workflow%3ATests..
+        |CirrusCI Status| image:: https://api.cirrus-ci.com/github/gorakhargosh/watchdog.svg
+        \  :target: https://cirrus-ci.com/github/gorakhargosh/watchdog/.. :changelog:Changelog---------3.0.0~~~~~2023-03-20
+        \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v2.3.1...v3.0.0>`__-
+        Drop support for Python 3.6.- ``watchdog`` is now PEP 561 compatible, and
+        tested with ``mypy``- Fix missing ``>`` in ``FileSystemEvent.__repr__()``
+        \ (`#980 <https://github.com/gorakhargosh/watchdog/pull/980>`__)- [ci] Lots
+        of improvements- [inotify] Return from ``InotifyEmitter.queue_events()`` if
+        not launched when thread is inactive (`#963 <https://github.com/gorakhargosh/watchdog/pull/963>`__)-
+        [tests] Stability improvements- [utils] Remove handling of ``threading.Event.isSet``
+        spelling (`#962 <https://github.com/gorakhargosh/watchdog/pull/962>`__)- [watchmedo]
+        Fixed tricks YAML generation (`#965 <https://github.com/gorakhargosh/watchdog/pull/965>`__)-
+        Thanks to our beloved contributors: @kurtmckee, @altendky, @agroszer, @BoboTiG2.3.1~~~~~2023-02-28
+        \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v2.3.0...v2.3.1>`__-
+        Run ``black`` on the entire source code- Bundle the ``requirements-tests.txt``
+        file in the source distribution (`#939 <https://github.com/gorakhargosh/watchdog/pull/939>`__)-
+        [watchmedo] Exclude ``FileOpenedEvent`` events from ``AutoRestartTrick``,
+        and ``ShellCommandTrick``, to restore watchdog < 2.3.0 behavior. A better
+        solution should be found in the future. (`#949 <https://github.com/gorakhargosh/watchdog/pull/949>`__)-
+        [watchmedo] Log ``FileOpenedEvent``, and ``FileClosedEvent``, events in ``LoggerTrick``-
+        Thanks to our beloved contributors: @BoboTiG2.3.0~~~~~2023-02-23 \u2022 `full
+        history <https://github.com/gorakhargosh/watchdog/compare/v2.2.1...v2.3.0>`__-
+        [inotify] Add support for ``IN_OPEN`` events: a ``FileOpenedEvent`` event
+        will be fired (`#941 <https://github.com/gorakhargosh/watchdog/pull/941>`__)-
+        [watchmedo] Add optional event debouncing for ``auto-restart``, only restarting
+        once if many events happen in quick succession (``--debounce-interval``) (`#940
+        <https://github.com/gorakhargosh/watchdog/pull/940>`__)- [watchmedo] Exit
+        gracefully on ``KeyboardInterrupt`` exception (Ctrl+C) (`#945 <https://github.com/gorakhargosh/watchdog/pull/945>`__)-
+        [watchmedo] Add option to not auto-restart the command after it exits (``--no-restart-on-command-exit``)
+        (`#946 <https://github.com/gorakhargosh/watchdog/pull/946>`__)- Thanks to
+        our beloved contributors: @BoboTiG, @dstaple, @taleinat, @cernekj2.2.1~~~~~2023-01-01
+        \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v2.2.0...v2.2.1>`__-
+        Enable ``mypy`` to discover type hints as specified in PEP 561 (`#933 <https://github.com/gorakhargosh/watchdog/pull/933>`__)-
+        [ci] Set the expected Python version when building release files- [ci] Update
+        actions versions in use- [watchmedo] [regression] Fix usage of missing ``signal.SIGHUP``
+        attribute on non-Unix OSes (`#935 <https://github.com/gorakhargosh/watchdog/pull/935>`__)-
+        Thanks to our beloved contributors: @BoboTiG, @simon04, @piotrpdev2.2.0~~~~~2022-12-05
+        \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v2.1.9...v2.2.0>`__-
+        [build] Wheels are now available for Python 3.11 (`#932 <https://github.com/gorakhargosh/watchdog/pull/932>`__)-
+        [documentation] HTML documentation builds are now tested for errors (`#902
+        <https://github.com/gorakhargosh/watchdog/pull/902>`__)- [documentation] Fix
+        typos here, and there (`#910 <https://github.com/gorakhargosh/watchdog/pull/910>`__)-
+        [fsevents2] The ``fsevents2`` observer is now deprecated (`#909 <https://github.com/gorakhargosh/watchdog/pull/909>`__)-
+        [tests] The error message returned by musl libc for error code ``-1`` is now
+        allowed (`#923 <https://github.com/gorakhargosh/watchdog/pull/923>`__)- [utils]
+        Remove unnecessary code in ``dirsnapshot.py`` (`#930 <https://github.com/gorakhargosh/watchdog/pull/930>`__)-
+        [watchmedo] Handle shutdown events from ``SIGHUP`` (`#912 <https://github.com/gorakhargosh/watchdog/pull/912>`__)-
+        Thanks to our beloved contributors: @kurtmckee, @babymastodon, @QuantumEnergyE,
+        @timgates42, @BoboTiG2.1.9~~~~~2022-06-10 \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v2.1.8...v2.1.9>`__-
+        [fsevents] Fix flakey test to assert that there are no errors when stopping
+        the emitter.- [inotify] Suppress occasional ``OSError: [Errno 9] Bad file
+        descriptor`` at shutdown. (`#805 <https://github.com/gorakhargosh/watchdog/issues/805>`__)-
+        [watchmedo] Make ``auto-restart`` restart the sub-process if it terminates.
+        (`#896 <https://github.com/gorakhargosh/watchdog/pull/896>`__)- [watchmedo]
+        Avoid zombie sub-processes when running ``shell-command`` without ``--wait``.
+        (`#405 <https://github.com/gorakhargosh/watchdog/issues/405>`__)- Thanks to
+        our beloved contributors: @samschott, @taleinat, @altendky, @BoboTiG2.1.8~~~~~2022-05-15
+        \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v2.1.7...v2.1.8>`__-
+        Fix adding failed emitters on observer schedule. (`#872 <https://github.com/gorakhargosh/watchdog/issues/872>`__)-
+        [inotify] Fix hang when unscheduling watch on a path in an unmounted filesystem.
+        (`#869 <https://github.com/gorakhargosh/watchdog/pull/869>`__)- [watchmedo]
+        Fix broken parsing of ``--kill-after`` argument for the ``auto-restart`` command.
+        (`#870 <https://github.com/gorakhargosh/watchdog/issues/870>`__)- [watchmedo]
+        Fix broken parsing of boolean arguments. (`#887 <https://github.com/gorakhargosh/watchdog/issues/887>`__)-
+        [watchmedo] Fix broken parsing of commands from ``auto-restart``, and ``shell-command``.
+        (`#888 <https://github.com/gorakhargosh/watchdog/issues/888>`__)- [watchmedo]
+        Support setting verbosity level via ``-q/--quiet`` and ``-v/--verbose`` arguments.
+        (`#889 <https://github.com/gorakhargosh/watchdog/pull/889>`__)- Thanks to
+        our beloved contributors: @taleinat, @kianmeng, @palfrey, @IlayRosenberg,
+        @BoboTiG2.1.7~~~~~2022-03-25 \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v2.1.6...v2.1.7>`__-
+        Eliminate timeout in waiting on event queue. (`#861 <https://github.com/gorakhargosh/watchdog/pull/861>`__)-
+        [inotify] Fix ``not`` equality implementation for ``InotifyEvent``. (`#848
+        <https://github.com/gorakhargosh/watchdog/pull/848>`__)- [watchmedo] Fix calling
+        commands from within a Python script. (`#879 <https://github.com/gorakhargosh/watchdog/pull/879>`__)-
+        [watchmedo] ``PyYAML`` is loaded only when strictly necessary. Simple usages
+        of ``watchmedo`` are possible without the module being installed. (`#847 <https://github.com/gorakhargosh/watchdog/pull/847>`__)-
+        Thanks to our beloved contributors: @sattlerc, @JanzenLiu, @BoboTiG2.1.6~~~~~2021-10-01
+        \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v2.1.5...v2.1.6>`__-
+        [bsd] Fixed returned paths in ``kqueue.py`` and restored the overall results
+        of the test suite. (`#842 <https://github.com/gorakhargosh/watchdog/pull/842>`__)-
+        [bsd] Updated FreeBSD CI support .(`#841 <https://github.com/gorakhargosh/watchdog/pull/841>`__)-
+        [watchmedo] Removed the ``argh`` dependency in favor of the builtin ``argparse``
+        module. (`#836 <https://github.com/gorakhargosh/watchdog/pull/836>`__)- [watchmedo]
+        Removed unexistant ``WindowsApiAsyncObserver`` references and ``--debug-force-winapi-async``
+        arguments.- [watchmedo] Improved the help output.- Thanks to our beloved contributors:
+        @knobix, @AndreaRe9, @BoboTiG2.1.5~~~~~2021-08-23 \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v2.1.4...v2.1.5>`__-
+        Fix regression introduced in 2.1.4 (reverted \"Allow overriding or adding
+        custom event handlers to event dispatch map. (`#814 <https://github.com/gorakhargosh/watchdog/pull/814>`__)\").
+        (`#830 <https://github.com/gorakhargosh/watchdog/pull/830>`__)- Convert regexes
+        of type ``str`` to ``list``. (`831 <https://github.com/gorakhargosh/watchdog/pull/831>`__)-
+        Thanks to our beloved contributors: @unique1o1, @BoboTiG2.1.4~~~~~2021-08-19
+        \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v2.1.3...v2.1.4>`__-
+        [watchmedo] Fix usage of ``os.setsid()`` and ``os.killpg()`` Unix-only functions.
+        (`#809 <https://github.com/gorakhargosh/watchdog/pull/809>`__)- [mac] Fix
+        missing ``FileModifiedEvent`` on permission or ownership changes of a file.
+        (`#815 <https://github.com/gorakhargosh/watchdog/pull/815>`__)- [mac] Convert
+        absolute watch path in ``FSEeventsEmitter`` with ``os.path.realpath()``. (`#822
+        <https://github.com/gorakhargosh/watchdog/pull/822>`__)- Fix a possible ``AttributeError``
+        in ``SkipRepeatsQueue._put()``. (`#818 <https://github.com/gorakhargosh/watchdog/pull/818>`__)-
+        Allow overriding or adding custom event handlers to event dispatch map. (`#814
+        <https://github.com/gorakhargosh/watchdog/pull/814>`__)- Fix tests on big
+        endian platforms. (`#828 <https://github.com/gorakhargosh/watchdog/pull/828>`__)-
+        Thanks to our beloved contributors: @replabrobin, @BoboTiG, @SamSchott, @AndreiB97,
+        @NiklasRosenstein, @ikokollari, @mgorny2.1.3~~~~~2021-06-26 \u2022 `full history
+        <https://github.com/gorakhargosh/watchdog/compare/v2.1.2...v2.1.3>`__- Publish
+        macOS ``arm64`` and ``universal2`` wheels. (`#740 <https://github.com/gorakhargosh/watchdog/pull/740>`__)-
+        Thanks to our beloved contributors: @kainjow, @BoboTiG2.1.2~~~~~2021-05-19
+        \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v2.1.1...v2.1.2>`__-
+        [mac] Fix relative path handling for non-recursive watch. (`#797 <https://github.com/gorakhargosh/watchdog/pull/797>`__)-
+        [windows] On PyPy, events happening right after ``start()`` were missed. Add
+        a workaround for that. (`#796 <https://github.com/gorakhargosh/watchdog/pull/796>`__)-
+        Thanks to our beloved contributors: @oprypin, @CCP-Aporia, @BoboTiG2.1.1~~~~~2021-05-10
+        \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v2.1.0...v2.1.1>`__-
+        [mac] Fix callback exceptions when the watcher is deleted but still receiving
+        events (`#786 <https://github.com/gorakhargosh/watchdog/pull/786>`__)- Thanks
+        to our beloved contributors: @rom1win, @BoboTiG, @CCP-Aporia2.1.0~~~~~2021-05-04
+        \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v2.0.3...v2.1.0>`__-
+        [inotify] Simplify ``libc`` loading (`#776 <https://github.com/gorakhargosh/watchdog/pull/776>`__)-
+        [mac] Add support for non-recursive watches in ``FSEventsEmitter`` (`#779
+        <https://github.com/gorakhargosh/watchdog/pull/779>`__)- [watchmedo] Add support
+        for ``--debug-force-*`` arguments to ``tricks`` (`#781 <https://github.com/gorakhargosh/watchdog/pull/781>`__)-
+        Thanks to our beloved contributors: @CCP-Aporia, @aodj, @UnitedMarsupials,
+        @BoboTiG2.0.3~~~~~2021-04-22 \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v2.0.2...v2.0.3>`__-
+        [mac] Use ``logger.debug()`` instead of ``logger.info()`` (`#774 <https://github.com/gorakhargosh/watchdog/pull/774>`__)-
+        Updated documentation links (`#777 <https://github.com/gorakhargosh/watchdog/pull/777>`__)-
+        Thanks to our beloved contributors: @globau, @imba-tjd, @BoboTiG2.0.2~~~~~2021-02-22
+        \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v2.0.1...v2.0.2>`__-
+        [mac] Add missing exception objects (`#766 <https://github.com/gorakhargosh/watchdog/pull/766>`__)-
+        Thanks to our beloved contributors: @CCP-Aporia, @BoboTiG2.0.1~~~~~2021-02-17
+        \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v2.0.0...v2.0.1>`__-
+        [mac] Fix a segmentation fault when dealing with unicode paths (`#763 <https://github.com/gorakhargosh/watchdog/pull/763>`__)-
+        Moved the CI from Travis-CI to GitHub Actions (`#764 <https://github.com/gorakhargosh/watchdog/pull/764>`__)-
+        Thanks to our beloved contributors: @SamSchott, @BoboTiG2.0.0~~~~~2021-02-11
+        \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v1.0.2...v2.0.0>`__-
+        Avoid deprecated ``PyEval_InitThreads`` on Python 3.7+ (`#746 <https://github.com/gorakhargosh/watchdog/pull/746>`__)-
+        [inotify] Add support for ``IN_CLOSE_WRITE`` events. A ``FileCloseEvent``
+        event will be fired. Note that ``IN_CLOSE_NOWRITE`` events are not handled
+        to prevent much noise. (`#184 <https://github.com/gorakhargosh/watchdog/pull/184>`__,
+        `#245 <https://github.com/gorakhargosh/watchdog/pull/245>`__, `#280 <https://github.com/gorakhargosh/watchdog/pull/280>`__,
+        `#313 <https://github.com/gorakhargosh/watchdog/pull/313>`__, `#690 <https://github.com/gorakhargosh/watchdog/pull/690>`__)-
+        [inotify] Allow to stop the emitter multiple times (`#760 <https://github.com/gorakhargosh/watchdog/pull/760>`__)-
+        [mac] Support coalesced filesystem events (`#734 <https://github.com/gorakhargosh/watchdog/pull/734>`__)-
+        [mac] Drop support for macOS 10.12 and earlier (`#750 <https://github.com/gorakhargosh/watchdog/pull/750>`__)-
+        [mac] Fix an issue when renaming an item changes only the casing (`#750 <https://github.com/gorakhargosh/watchdog/pull/750>`__)-
+        Thanks to our beloved contributors: @bstaletic, @lukassup, @ysard, @SamSchott,
+        @CCP-Aporia, @BoboTiG1.0.2~~~~~2020-12-18 \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v1.0.1...v1.0.2>`__-
+        Wheels are published for GNU/Linux, macOS and Windows (`#739 <https://github.com/gorakhargosh/watchdog/pull/739>`__)-
+        [mac] Fix missing ``event_id`` attribute in ``fsevents`` (`#721 <https://github.com/gorakhargosh/watchdog/pull/721>`__)-
+        [mac] Return byte paths if a byte path was given in ``fsevents`` (`#726 <https://github.com/gorakhargosh/watchdog/pull/726>`__)-
+        [mac] Add compatibility with old macOS versions (`#733 <https://github.com/gorakhargosh/watchdog/pull/733>`__)-
+        Uniformize event for deletion of watched dir (`#727 <https://github.com/gorakhargosh/watchdog/pull/727>`__)-
+        Thanks to our beloved contributors: @SamSchott, @CCP-Aporia, @di, @BoboTiG1.0.1~~~~~2020-12-10
+        \u2022 Fix version with good metadatas.1.0.0~~~~~2020-12-10 \u2022 `full history
+        <https://github.com/gorakhargosh/watchdog/compare/v0.10.4...v1.0.0>`__- Versioning
+        is now following the `semver <https://semver.org/>`__- Drop support for Python
+        2.7, 3.4 and 3.5- [mac] Regression fixes for native ``fsevents`` (`#717 <https://github.com/gorakhargosh/watchdog/pull/717>`__)-
+        [windows] ``winapi.BUFFER_SIZE`` now defaults to ``64000`` (instead of ``2048``)
+        (`#700 <https://github.com/gorakhargosh/watchdog/pull/700>`__)- [windows]
+        Introduced ``winapi.PATH_BUFFER_SIZE`` (defaults to ``2048``) to keep the
+        old behavior with path-realted functions (`#700 <https://github.com/gorakhargosh/watchdog/pull/700>`__)-
+        Use ``pathlib`` from the standard library, instead of pathtools (`#556 <https://github.com/gorakhargosh/watchdog/pull/556>`__)-
+        Allow file paths on Unix that don't follow the file system encoding (`#703
+        <https://github.com/gorakhargosh/watchdog/pull/703>`__)- Removed the long-time
+        deprecated ``events.LoggingFileSystemEventHandler`` class, use ``LoggingEventHandler``
+        instead- Thanks to our beloved contributors: @SamSchott, @bstaletic, @BoboTiG,
+        @CCP-Aporia0.10.4~~~~~~2020-11-21 \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v0.10.3...v0.10.4>`__-
+        Add ``logger`` parameter for the ``LoggingEventHandler`` (`#676 <https://github.com/gorakhargosh/watchdog/pull/676>`__)-
+        Replace mutable default arguments with ``if None`` implementation (`#677 <https://github.com/gorakhargosh/watchdog/pull/677>`__)-
+        Expand tests to Python 2.7 and 3.5-3.10 for GNU/Linux, macOS and Windows-
+        [mac] Performance improvements for the ``fsevents`` module (`#680 <https://github.com/gorakhargosh/watchdog/pull/680>`__)-
+        [mac] Prevent compilation of ``watchdog_fsevents.c`` on non-macOS machines
+        (`#687 <https://github.com/gorakhargosh/watchdog/pull/687>`__)- [watchmedo]
+        Handle shutdown events from ``SIGTERM`` and ``SIGINT`` more reliably (`#693
+        <https://github.com/gorakhargosh/watchdog/pull/693>`__)- Thanks to our beloved
+        contributors: @Sraw, @CCP-Aporia, @BoboTiG, @maybe-sybr0.10.3~~~~~~2020-06-25
+        \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v0.10.2...v0.10.3>`__-
+        Ensure ``ObservedWatch.path`` is a string (`#651 <https://github.com/gorakhargosh/watchdog/pull/651>`__)-
+        [inotify] Allow to monitor single file (`#655 <https://github.com/gorakhargosh/watchdog/pull/655>`__)-
+        [inotify] Prevent raising an exception when a file in a monitored folder has
+        no permissions (`#669 <https://github.com/gorakhargosh/watchdog/pull/669>`__,
+        `#670 <https://github.com/gorakhargosh/watchdog/pull/670>`__)- Thanks to our
+        beloved contributors: @brant-ruan, @rec, @andfoy, @BoboTiG0.10.2~~~~~~2020-02-08
+        \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v0.10.1...v0.10.2>`__-
+        Fixed the ``build_ext`` command on macOS Catalina (`#628 <https://github.com/gorakhargosh/watchdog/pull/628>`__)-
+        Fixed the installation of macOS requirements on non-macOS OSes (`#635 <https://github.com/gorakhargosh/watchdog/pull/635>`__)-
+        Refactored ``dispatch()`` method of ``FileSystemEventHandler``,  ``PatternMatchingEventHandler``
+        and ``RegexMatchingEventHandler``- [bsd] Improved tests support on non Windows/Linux
+        platforms (`#633 <https://github.com/gorakhargosh/watchdog/pull/633>`__, `#639
+        <https://github.com/gorakhargosh/watchdog/pull/639>`__)- [bsd] Added FreeBSD
+        CI support (`#532 <https://github.com/gorakhargosh/watchdog/pull/532>`__)-
+        [bsd] Restored full support (`#638 <https://github.com/gorakhargosh/watchdog/pull/638>`__,
+        `#641 <https://github.com/gorakhargosh/watchdog/pull/641>`__)- Thanks to our
+        beloved contributors: @BoboTiG, @evilham, @danilobellini0.10.1~~~~~~2020-01-30
+        \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v0.10.0...v0.10.1>`__-
+        Fixed Python 2.7 to 3.6 installation when the OS locale is set to POSIX (`#615
+        <https://github.com/gorakhargosh/watchdog/pull/615>`__)- Fixed the ``build_ext``
+        command on macOS  (`#618 <https://github.com/gorakhargosh/watchdog/pull/618>`__,
+        `#620 <https://github.com/gorakhargosh/watchdog/pull/620>`__)- Moved requirements
+        to ``setup.cfg``  (`#617 <https://github.com/gorakhargosh/watchdog/pull/617>`__)-
+        [mac] Removed old C code for Python 2.5 in the `fsevents` C implementation-
+        [snapshot] Added ``EmptyDirectorySnapshot`` (`#613 <https://github.com/gorakhargosh/watchdog/pull/613>`__)-
+        Thanks to our beloved contributors: @Ajordat, @tehkirill, @BoboTiG0.10.0~~~~~~2020-01-26
+        \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v0.9.0...v0.10.0>`__**Breaking
+        Changes**- Dropped support for Python 2.6, 3.2 and 3.3- Emitters that failed
+        to start are now removed- [snapshot] Removed the deprecated ``walker_callback``
+        argument,  use ``stat`` instead- [watchmedo] The utility is no more installed
+        by default but via the extra  ``watchdog[watchmedo]``**Other Changes**- Fixed
+        several Python 3 warnings- Identify synthesized events with ``is_synthetic``
+        attribute (`#369 <https://github.com/gorakhargosh/watchdog/pull/369>`__)-
+        Use ``os.scandir()`` to improve memory usage (`#503 <https://github.com/gorakhargosh/watchdog/pull/503>`__)-
+        [bsd] Fixed flavors of FreeBSD detection (`#529 <https://github.com/gorakhargosh/watchdog/pull/529>`__)-
+        [bsd] Skip unprocessable socket files (`#509 <https://github.com/gorakhargosh/watchdog/issue/509>`__)-
+        [inotify] Fixed events containing non-ASCII characters (`#516 <https://github.com/gorakhargosh/watchdog/issues/516>`__)-
+        [inotify] Fixed the way ``OSError`` are re-raised (`#377 <https://github.com/gorakhargosh/watchdog/issues/377>`__)-
+        [inotify] Fixed wrong source path after renaming a top level folder (`#515
+        <https://github.com/gorakhargosh/watchdog/pull/515>`__)- [inotify] Removed
+        \ delay from non-move events (`#477 <https://github.com/gorakhargosh/watchdog/pull/477>`__)-
+        [mac] Fixed a bug when calling ``FSEventsEmitter.stop()`` twice (`#466 <https://github.com/gorakhargosh/watchdog/pull/466>`__)-
+        [mac] Support for unscheduling deleted watch (`#541 <https://github.com/gorakhargosh/watchdog/issue/541>`__)-
+        [mac] Fixed missing field initializers and unused parameters in  ``watchdog_fsevents.c``-
+        [snapshot] Don't walk directories without read permissions (`#408 <https://github.com/gorakhargosh/watchdog/pull/408>`__)-
+        [snapshot] Fixed a race condition crash when a directory is swapped for a
+        file (`#513 <https://github.com/gorakhargosh/watchdog/pull/513>`__)- [snasphot]
+        Fixed an ``AttributeError`` about forgotten ``path_for_inode`` attr (`#436
+        <https://github.com/gorakhargosh/watchdog/issues/436>`__)- [snasphot] Added
+        the ``ignore_device=False`` parameter to the ctor (`597 <https://github.com/gorakhargosh/watchdog/pull/597>`__)-
+        [watchmedo] Fixed the path separator used (`#478 <https://github.com/gorakhargosh/watchdog/pull/478>`__)-
+        [watchmedo] Fixed the use of ``yaml.load()`` for ``yaml.safe_load()`` (`#453
+        <https://github.com/gorakhargosh/watchdog/issues/453>`__)- [watchmedo] Handle
+        all available signals (`#549 <https://github.com/gorakhargosh/watchdog/issue/549>`__)-
+        [watchmedo] Added the ``--debug-force-polling`` argument (`#404 <https://github.com/gorakhargosh/watchdog/pull/404>`__)-
+        [windows] Fixed issues when the observed directory is deleted (`#570 <https://github.com/gorakhargosh/watchdog/issues/570>`__
+        and `#601 <https://github.com/gorakhargosh/watchdog/pull/601>`__)- [windows]
+        ``WindowsApiEmitter`` made easier to subclass (`#344 <https://github.com/gorakhargosh/watchdog/pull/344>`__)-
+        [windows] Use separate ctypes DLL instances- [windows] Generate sub created
+        events only if ``recursive=True`` (`#454 <https://github.com/gorakhargosh/watchdog/pull/454>`__)-
+        Thanks to our beloved contributors: @BoboTiG, @LKleinNux, @rrzaripov,  @wildmichael,
+        @TauPan, @segevfiner, @petrblahos, @QuantumEnergyE,  @jeffwidman, @kapsh,
+        @nickoala, @petrblahos, @julianolf, @tonybaloney,  @mbakiev, @pR0Ps, javaguirre,
+        @skurfer, @exarkun, @joshuaskelly,  @danilobellini, @Ajordat0.9.0~~~~~2018-08-28
+        \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v0.8.3...v0.9.0>`__-
+        Deleting the observed directory now emits a ``DirDeletedEvent`` event- [bsd]
+        Improved the platform detection (`#378 <https://github.com/gorakhargosh/watchdog/pull/378>`__)-
+        [inotify] Fixed a crash when the root directory being watched by was deleted
+        (`#374 <https://github.com/gorakhargosh/watchdog/pull/374>`__)- [inotify]
+        Handle systems providing uClibc- [linux] Fixed a possible ``DirDeletedEvent``
+        duplication when  deleting a directory- [mac] Fixed unicode path handling
+        ``fsevents2.py`` (`#298 <https://github.com/gorakhargosh/watchdog/pull/298>`__)-
+        [watchmedo] Added the ``--debug-force-polling`` argument (`#336 <https://github.com/gorakhargosh/watchdog/pull/336>`__)-
+        [windows] Fixed the ``FILE_LIST_DIRECTORY`` constant (`#376 <https://github.com/gorakhargosh/watchdog/pull/376>`__)-
+        Thanks to our beloved contributors: @vulpeszerda, @hpk42, @tamland, @senden9,
+        \ @gorakhargosh, @nolsto, @mafrosis, @DonyorM, @anthrotype, @danilobellini,
+        \ @pierregr, @ShinNoNoir, @adrpar, @gforcada, @pR0Ps, @yegorich, @dhke0.8.3~~~~~2015-02-11
+        \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v0.8.2...v0.8.3>`__-
+        Fixed the use of the root logger (`#274 <https://github.com/gorakhargosh/watchdog/issues/274>`__)-
+        [inotify] Refactored libc loading and improved error handling in  ``inotify_c.py``-
+        [inotify] Fixed a possible unbound local error in ``inotify_c.py``- Thanks
+        to our beloved contributors: @mmorearty, @tamland, @tony,  @gorakhargosh0.8.2~~~~~2014-10-29
+        \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v0.8.1...v0.8.2>`__-
+        Event emitters are no longer started on schedule if ``Observer`` is not  already
+        running- [mac] Fixed usued arguments to pass clang compilation (`#265 <https://github.com/gorakhargosh/watchdog/pull/265>`__)-
+        [snapshot] Fixed a possible race condition crash on directory deletion (`#281
+        <https://github.com/gorakhargosh/watchdog/pull/281>`__)- [windows] Fixed an
+        error when watching the same folder again (`#270 <https://github.com/gorakhargosh/watchdog/pull/270>`__)-
+        Thanks to our beloved contributors: @tamland, @apetrone, @Falldog,  @theospears0.8.1~~~~~2014-07-28
+        \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v0.8.0...v0.8.1>`__-
+        Fixed ``anon_inode`` descriptors leakage  (`#249 <https://github.com/gorakhargosh/watchdog/pull/249>`__)-
+        [inotify] Fixed thread stop dead lock (`#250 <https://github.com/gorakhargosh/watchdog/issues/250>`__)-
+        Thanks to our beloved contributors: @Witos, @adiroiban, @tamland0.8.0~~~~~2014-07-02
+        \u2022 `full history <https://github.com/gorakhargosh/watchdog/compare/v0.7.1...v0.8.0>`__-
+        Fixed ``argh`` deprecation warnings (`#242 <https://github.com/gorakhargosh/watchdog/pull/242>`__)-
+        [snapshot] Methods returning internal stats info were replaced by  ``mtime()``,
+        ``inode()`` and ``path()`` methods- [snapshot] Deprecated the ``walker_callback``
+        argument- [watchmedo] Fixed ``auto-restart`` to terminate all children processes
+        (`#225 <https://github.com/gorakhargosh/watchdog/pull/225>`__)- [watchmedo]
+        Added the ``--no-parallel`` argument (`#227 <https://github.com/gorakhargosh/watchdog/issues/227>`__)-
+        [windows] Fixed the value of ``INVALID_HANDLE_VALUE`` (`#123 <https://github.com/gorakhargosh/watchdog/issues/123>`__)-
+        [windows] Fixed octal usages to work with Python 3 as well (`#223 <https://github.com/gorakhargosh/watchdog/issues/223>`__)-
+        Thanks to our beloved contributors: @tamland, @Ormod, @berdario, @cro,  @BernieSumption,
+        @pypingou, @gotcha, @tommorris, @frewsxcv"
+      Package: watchdog
+      Source: pip
+      Version: 3.0.0
+      Hash: ''
+      licenses:
+      - Apache-2.0
+      - BSD-3-Clause
+      - public-domain
+      Title: watchdog
+      DownloadURL: https://files.pythonhosted.org/packages/95/a6/d6ef450393dac5734c63c40a131f66808d2e6f59f6165ab38c98fbe4e6ec/watchdog-3.0.0.tar.gz
+  bazaar:
+    register: 'no'
+    prim: 17/CAX1058014
+    community_link: https://github.com/gorakhargosh/watchdog
+    community_name: https://github.com/gorakhargosh/watchdog
+    community_url: https://github.com/gorakhargosh/watchdog
+    component_comment: ''
+    component_highlevel_description: Python library and shell utilities to monitor
+      filesystem events.
+    component_name: watchdog
+    component_platform: linux
+    component_programing_language: Python
+    component_version: V3.0.0
+    licenses:
+    - FAL1159004/20 (Apache License 2.0 (Apache-2.0))
+    src_download_link: https://github.com/gorakhargosh/watchdog/archive/v3.0.0.tar.gz
+    stako_decision_reason: allowed
+    stako: ESW3
+    stako_comment: Low Community Activity.
+    bazaarurl: https://scas.internal.ericsson.com/search3pp?id=1055364&id-filter=equals&rowDisplay=Card-Simple
+    recode: ''
+    retext: ''
+    country: United States
+    crypto: ''
+    programming_language: Python
+  encryptions:
+    used:
+    - ''
+  evms:
+    register: 'yes'
+    product_name: watchdog
+    target_sw: linux
+    vendor: pip
+    version: 3.0.0
+    web_url: https://github.com/gorakhargosh/watchdog
+  licenses:
+  - Apache-2.0
+  - BSD-3-Clause
+  - public-domain
+  name: watchdog
+  primary:
+  - this
+  subcomponent: false
+  type: FOSS
+  versions:
+  - 3.0.0
+  mimer:
+    linking: Static
+    product_number: CAX1058014
+    product_version_label: V3.0.0
+    selected_licenses:
+    - Apache-2.0
+    obligation: Including the full license text in a prominent place with the software
+      when the FOSS is distributed
+    usage: Use as is
+    primary: 'True'
+  alerts:
+  - Stako is 'ESW3', BAZAAR/SCAS component is not recommended to be used
+  - '''watchdog'': Manual set stako_decision_reason: ''allowed'' for stako: ''ESW3'',
+    team takes the risk!'
+- ID: zope.event+5.0
+  additional_info:
+    fossa-attribution:
+      Description: '======================= ``zope.event`` README=======================..
+        image:: https://img.shields.io/pypi/v/zope.event.svg        :target: https://pypi.python.org/pypi/zope.event/        :alt:
+        Latest Version.. image:: https://github.com/zopefoundation/zope.event/actions/workflows/tests.yml/badge.svg        :target:
+        https://github.com/zopefoundation/zope.event/actions/workflows/tests.yml..
+        image:: https://readthedocs.org/projects/zopeevent/badge/?version=latest        :target:
+        http://zopeevent.readthedocs.org/en/latest/        :alt: Documentation StatusThe
+        ``zope.event`` package provides a simple event system, including:- An event
+        publishing API, intended for use by applications which are  unaware of any
+        subscribers to their events.- A very simple synchronous event-dispatching
+        system, on which more sophisticated  event dispatching systems can be built.
+        For example, a type-based  event dispatching system that builds on ``zope.event``
+        can be found in  ``zope.component``.Please see http://zopeevent.readthedocs.io/
+        for the documentation.========================== ``zope.event`` Changelog==========================5.0
+        (2023-06-23)================- Drop support for Python 2.7, 3.5, 3.6.4.6 (2022-12-15)================-
+        Port documentation to Python 3.- Add support for Python 3.10, 3.11.4.5.0 (2020-09-18)==================-
+        Add support for Python 3.8 and 3.9.- Remove support for Python 3.4.4.4 (2018-10-05)================-
+        Add support for Python 3.74.3.0 (2017-07-25)==================- Add support
+        for Python 3.6.- Drop support for Python 3.3.4.2.0 (2016-02-17)==================-
+        Add support for Python 3.5.- Drop support for Python 2.6 and 3.2.4.1.0 (2015-10-18)==================-
+        Require 100% branch (as well as statement) coverage.- Add a simple class-based
+        handler implementation.4.0.3 (2014-03-19)==================- Add support for
+        Python 3.4.- Update ``boostrap.py`` to version 2.2.4.0.2 (2012-12-31)==================-
+        Flesh out PyPI Trove classifiers.- Add support for jython 2.7.4.0.1 (2012-11-21)==================-
+        Add support for Python 3.3.4.0.0 (2012-05-16)==================- Automate
+        build of Sphinx HTML docs and running doctest snippets via tox.- Drop explicit
+        support for Python 2.4 / 2.5 / 3.1.- Add support for PyPy.3.5.2 (2012-03-30)==================-
+        This release is the last which will maintain support for Python 2.4 /  Python
+        2.5.- Add support for continuous integration using ``tox`` and ``jenkins``.-
+        Add ''setup.py dev'' alias (runs ``setup.py develop`` plus installs  ``nose``
+        and ``coverage``).- Add ''setup.py docs'' alias (installs ``Sphinx`` and dependencies).3.5.1
+        (2011-08-04)==================- Add Sphinx documentation.3.5.0 (2010-05-01)==================-
+        Add change log to ``long-description``.- Add support for Python 3.x.3.4.1
+        (2009-03-03)==================- A few minor cleanups.3.4.0 (2007-07-14)==================-
+        Initial release as a separate project.'
+      Package: zope.event
+      Source: pip
+      Version: '5.0'
+      Hash: ''
+      licenses:
+      - ZPL-2.1
+      Title: zope.event
+      DownloadURL: https://files.pythonhosted.org/packages/46/c2/427f1867bb96555d1d34342f1dd97f8c420966ab564d58d18469a1db8736/zope.event-5.0.tar.gz
+  bazaar:
+    register: 'no'
+    prim: 5/CTX1027570
+    community_link: https://github.com/zopefoundation/zope.event
+    community_name: https://github.com/zopefoundation/zope.event
+    community_url: https://github.com/zopefoundation/zope.event
+    component_comment: ''
+    component_highlevel_description: Event publishing / dispatch, used by Zope Component
+      Architecture.
+    component_name: zope.event
+    component_platform: linux
+    component_programing_language: Python
+    component_version: '5.0'
+    licenses:
+    - FAL1159237/21 (Zope Public License 2.1 (ZPL-2.1))
+    src_download_link: https://github.com/zopefoundation/zope.event/archive/refs/tags/5.0.tar.gz
+    stako_decision_reason: allowed
+    stako: ESW3
+    stako_comment: Low community activity
+    bazaarurl: https://scas.internal.ericsson.com/search3pp?id=1064921&id-filter=equals&rowDisplay=Card-Simple
+    recode: ''
+    retext: ''
+    country: United States
+    crypto: No Encryption
+    programming_language: Python
+  encryptions:
+    used:
+    - ''
+  evms:
+    register: 'yes'
+    product_name: zope.event
+    target_sw: linux
+    vendor: pip
+    version: '5.0'
+    web_url: https://github.com/zopefoundation/zope.event
+  licenses:
+  - ZPL-2.1
+  name: zope.event
+  primary:
+  - this
+  subcomponent: false
+  type: FOSS
+  versions:
+  - '5.0'
+  mimer:
+    linking: Static
+    product_number: CTX1027570
+    product_version_label: '5.0'
+    obligation: Including the full license text in a prominent place with the software
+      when the FOSS is distributed
+    usage: Use as is
+    primary: 'True'
+- ID: zope.interface+6.1
+  additional_info:
+    fossa-attribution:
+      Description: '==================== ``zope.interface``====================..
+        image:: https://img.shields.io/pypi/v/zope.interface.svg    :target: https://pypi.python.org/pypi/zope.interface/    :alt:
+        Latest Version.. image:: https://img.shields.io/pypi/pyversions/zope.interface.svg        :target:
+        https://pypi.org/project/zope.interface/        :alt: Supported Python versions..
+        image:: https://github.com/zopefoundation/zope.interface/actions/workflows/tests.yml/badge.svg        :target:
+        https://github.com/zopefoundation/zope.interface/actions/workflows/tests.yml..
+        image:: https://readthedocs.org/projects/zopeinterface/badge/?version=latest        :target:
+        https://zopeinterface.readthedocs.io/en/latest/        :alt: Documentation
+        StatusThis package is intended to be independently reusable in any Pythonproject.
+        It is maintained by the `Zope Toolkit project<https://zopetoolkit.readthedocs.io/>`_.This
+        package provides an implementation of "object interfaces" for Python.Interfaces
+        are a mechanism for labeling objects as conforming to a givenAPI or contract.
+        So, this package can be considered as implementation ofthe `Design By Contract`_
+        methodology support in Python... _Design By Contract: http://en.wikipedia.org/wiki/Design_by_contractFor
+        detailed documentation, please see https://zopeinterface.readthedocs.io/en/latest/=========
+        Changes=========6.1 (2023-10-05)================- Build Linux binary wheels
+        for Python 3.12.- Add support for Python 3.12.- Fix building of the docs for
+        non-final versions.6.0 (2023-03-17)================- Build Linux binary wheels
+        for Python 3.11.- Drop support for Python 2.7, 3.5, 3.6.- Fix test deprecation
+        warning on Python 3.11.- Add preliminary support for Python 3.12 as of 3.12a5.-
+        Drop:    + `zope.interface.implements`    + `zope.interface.implementsOnly`    +
+        `zope.interface.classProvides`5.5.2 (2022-11-17)==================- Add support
+        for building arm64 wheels on macOS.5.5.1 (2022-11-03)==================- Add
+        support for final Python 3.11 release.5.5.0 (2022-10-10)==================-
+        Add support for Python 3.10 and 3.11 (as of 3.11.0rc2).- Add missing Trove
+        classifier showing support for Python 3.9.- Add some more entries to ``zope.interface.interfaces.__all__``.-
+        Disable unsafe math optimizations in C code.  See `pull request 262  <https://github.com/zopefoundation/zope.interface/pull/262>`_.5.4.0
+        (2021-04-15)==================- Make the C implementation of the ``__providedBy__``
+        descriptor stop  ignoring all errors raised when accessing the instance''s  ``__provides__``.
+        Now it behaves like the Python version and only  catches ``AttributeError``.
+        The previous behaviour could lead to  crashing the interpreter in cases of
+        recursion and errors. See  `issue 239 <https://github.com/zopefoundation/zope.interface/issues>`_.-
+        Update the ``repr()`` and ``str()`` of various objects to be shorter  and
+        more informative. In many cases, the ``repr()`` is now something  that can
+        be evaluated to produce an equal object. For example, what  was previously
+        printed as ``<implementedBy builtins.list>`` is now  shown as ``classImplements(list,
+        IMutableSequence, IIterable)``. See  `issue 236 <https://github.com/zopefoundation/zope.interface/issues/236>`_.-
+        Make ``Declaration.__add__`` (as in ``implementedBy(Cls) +  ISomething``)
+        try harder to preserve a consistent resolution order  when the two arguments
+        share overlapping pieces of the interface  inheritance hierarchy. Previously,
+        the right hand side was always  put at the end of the resolution order, which
+        could easily produce  invalid orders. See `issue 193  <https://github.com/zopefoundation/zope.interface/issues/193>`_.5.3.0
+        (2020-03-21)==================- No changes from 5.3.0a15.3.0a1 (2021-03-18)====================-
+        Improve the repr of ``zope.interface.Provides`` to remove ambiguity  about
+        what is being provided. This is especially helpful diagnosing  IRO issues.-
+        Allow subclasses of ``BaseAdapterRegistry`` (including  ``AdapterRegistry``
+        and ``VerifyingAdapterRegistry``) to have  control over the data structures.
+        This allows persistent  implementations such as those based on ZODB to choose
+        more scalable  options (e.g., BTrees instead of dicts). See `issue 224  <https://github.com/zopefoundation/zope.interface/issues/224>`_.-
+        Fix a reference counting issue in ``BaseAdapterRegistry`` that could  lead
+        to references to interfaces being kept around even when all  utilities/adapters/subscribers
+        providing that interface have been  removed. This is mostly an issue for persistent
+        implementations.  Note that this only corrects the issue moving forward, it
+        does not  solve any already corrupted reference counts. See `issue 227  <https://github.com/zopefoundation/zope.interface/issues/227>`_.-
+        Add the method ``BaseAdapterRegistry.rebuild()``. This can be used  to fix
+        the reference counting issue mentioned above, as well as to  update the data
+        structures when custom data types have changed.- Add the interface method
+        ``IAdapterRegistry.subscribed()`` and  implementation ``BaseAdapterRegistry.subscribed()``
+        for querying  directly registered subscribers. See `issue 230  <https://github.com/zopefoundation/zope.interface/issues/230>`_.-
+        Add the maintenance method  ``Components.rebuildUtilityRegistryFromLocalCache()``.
+        Most users  will not need this, but it can be useful if the ``Components.utilities``  registry
+        is suspected to be out of sync with the ``Components``  object itself (this
+        might happen to persistent ``Components``  implementations in the face of
+        bugs).- Fix the ``Provides`` and ``ClassProvides`` descriptors to stop  allowing
+        redundant interfaces (those already implemented by the  underlying class or
+        meta class) to produce an inconsistent  resolution order. This is similar
+        to the change in ``@implementer``  in 5.1.0, and resolves inconsistent resolution
+        orders with  ``zope.proxy`` and ``zope.location``. See `issue 207  <https://github.com/zopefoundation/zope.interface/issues/207>`_.5.2.0
+        (2020-11-05)==================- Add documentation section ``Persistency and
+        Equality``  (`#218 <https://github.com/zopefoundation/zope.interface/issues/218>`_).-
+        Create arm64 wheels.- Add support for Python 3.9.5.1.2 (2020-10-01)==================-
+        Make sure to call each invariant only once when validating invariants.  Previously,
+        invariants could be called multiple times because when an  invariant is defined
+        in an interface, it''s found by in all interfaces  inheriting from that interface.  See
+        `pull request 215  <https://github.com/zopefoundation/zope.interface/pull/215/>`_.5.1.1
+        (2020-09-30)==================- Fix the method definitions of ``IAdapterRegistry.subscribe``,  ``subscriptions``
+        and ``subscribers``. Previously, they all were  defined to accept a ``name``
+        keyword argument, but subscribers have  no names and the implementation of
+        that interface did not accept  that argument. See `issue 208  <https://github.com/zopefoundation/zope.interface/issues/208>`_.-
+        Fix a potential reference leak in the C optimizations. Previously,  applications
+        that dynamically created unique ``Specification``  objects (e.g., used ``@implementer``
+        on dynamic classes) could  notice a growth of small objects over time leading
+        to increased  garbage collection times. See `issue 216  <https://github.com/zopefoundation/zope.interface/issues/216>`_.  ..
+        caution::     This leak could prevent interfaces used as the bases of     other
+        interfaces from being garbage collected. Those interfaces     will now be
+        collected.     One way in which this would manifest was that ``weakref.ref``     objects
+        (and things built upon them, like     ``Weak[Key|Value]Dictionary``) would
+        continue to have access to     the original object even if there were no other
+        visible     references to Python and the original object *should* have been     collected.
+        This could be especially problematic for the     ``WeakKeyDictionary`` when
+        combined with dynamic or local     (created in the scope of a function) interfaces,
+        since interfaces     are hashed based just on their name and module name.
+        See the     linked issue for an example of a resulting ``KeyError``.     Note
+        that such potential errors are not new, they are just once     again a possibility.5.1.0
+        (2020-04-08)==================- Make ``@implementer(*iface)`` and ``classImplements(cls,
+        *iface)``  ignore redundant interfaces. If the class already implements an  interface
+        through inheritance, it is no longer redeclared  specifically for *cls*. This
+        solves many instances of inconsistent  resolution orders, while still allowing
+        the interface to be declared  for readability and maintenance purposes. See
+        `issue 199  <https://github.com/zopefoundation/zope.interface/issues/199>`_.-
+        Remove all bare ``except:`` statements. Previously, when accessing  special
+        attributes such as ``__provides__``, ``__providedBy__``,  ``__class__`` and
+        ``__conform__``, this package wrapped such access  in a bare ``except:`` statement,
+        meaning that many errors could pass  silently; typically this would result
+        in a fallback path being taken  and sometimes (like with ``providedBy()``)
+        the result would be  non-sensical. This is especially true when those attributes
+        are  implemented with descriptors. Now, only ``AttributeError`` is  caught.
+        This makes errors more obvious.  Obviously, this means that some exceptions
+        will be propagated  differently than before. In particular, ``RuntimeError``
+        raised by  Acquisition in the case of circular containment will now be  propagated.
+        Previously, when adapting such a broken object, a  ``TypeError`` would be
+        the common result, but now it will be a more  informative ``RuntimeError``.  In
+        addition, ZODB errors like ``POSKeyError`` could now be  propagated where
+        previously they would ignored by this package.  See `issue 200 <https://github.com/zopefoundation/zope.interface/issues/200>`_.-
+        Require that the second argument (*bases*) to ``InterfaceClass`` is  a tuple.
+        This only matters when directly using ``InterfaceClass`` to  create new interfaces
+        dynamically. Previously, an individual  interface was allowed, but did not
+        work correctly. Now it is  consistent with ``type`` and requires a tuple.-
+        Let interfaces define custom ``__adapt__`` methods. This implements  the other
+        side of the :pep:`246` adaptation protocol: objects being  adapted could already
+        implement ``__conform__`` if they know about  the interface, and now interfaces
+        can implement ``__adapt__`` if  they know about particular objects. There
+        is no performance penalty  for interfaces that do not supply custom ``__adapt__``
+        methods.  This includes the ability to add new methods, or override existing  interface
+        methods using the new ``@interfacemethod`` decorator.  See `issue 3 <https://github.com/zopefoundation/zope.interface/issues/3>`_.-
+        Make the internal singleton object returned by APIs like  ``implementedBy``
+        and ``directlyProvidedBy`` for objects that  implement or provide no interfaces
+        more immutable. Previously an  internal cache could be mutated. See `issue
+        204  <https://github.com/zopefoundation/zope.interface/issues/204>`_.5.0.2
+        (2020-03-30)==================- Ensure that objects that implement no interfaces
+        (such as direct  subclasses of ``object``) still include ``Interface`` itself
+        in  their ``__iro___`` and ``__sro___``. This fixes adapter registry  lookups
+        for such objects when the adapter is registered for  ``Interface``. See `issue
+        197  <https://github.com/zopefoundation/zope.interface/issues/197>`_.5.0.1
+        (2020-03-21)==================- Ensure the resolution order for ``InterfaceClass``
+        is consistent.  See `issue 192 <https://github.com/zopefoundation/zope.interface/issues/192>`_.-
+        Ensure the resolution order for ``collections.OrderedDict`` is  consistent
+        on CPython 2. (It was already consistent on Python 3 and PyPy).- Fix the handling
+        of the ``ZOPE_INTERFACE_STRICT_IRO`` environment  variable. Previously, ``ZOPE_INTERFACE_STRICT_RO``
+        was read, in  contrast with the documentation. See `issue 194  <https://github.com/zopefoundation/zope.interface/issues/194>`_.5.0.0
+        (2020-03-19)==================- Make an internal singleton object returned
+        by APIs like  ``implementedBy`` and ``directlyProvidedBy`` immutable. Previously,  it
+        was fully mutable and allowed changing its ``__bases___``. That  could potentially
+        lead to wrong results in pathological corner  cases. See `issue 158  <https://github.com/zopefoundation/zope.interface/issues/158>`_.-
+        Support the ``PURE_PYTHON`` environment variable at runtime instead  of just
+        at wheel build time. A value of 0 forces the C extensions to  be used (even
+        on PyPy) failing if they aren''t present. Any other  value forces the Python
+        implementation to be used, ignoring the C  extensions. See `PR 151 <https://github.com/zopefoundation/zope.interface/pull/151>`_.-
+        Cache the result of ``__hash__`` method in ``InterfaceClass`` as a  speed
+        optimization. The method is called very often (i.e several  hundred thousand
+        times during Plone 5.2 startup). Because the hash value never  changes it
+        can be cached. This improves test performance from 0.614s  down to 0.575s
+        (1.07x faster). In a real world Plone case a reindex  index came down from
+        402s to 320s (1.26x faster). See `PR 156  <https://github.com/zopefoundation/zope.interface/pull/156>`_.-
+        Change the C classes ``SpecificationBase`` and its subclass  ``ClassProvidesBase``
+        to store implementation attributes in their structures  instead of their instance
+        dictionaries. This eliminates the use of  an undocumented private C API function,
+        and helps make some  instances require less memory. See `PR 154 <https://github.com/zopefoundation/zope.interface/pull/154>`_.-
+        Reduce memory usage in other ways based on observations of usage  patterns
+        in Zope (3) and Plone code bases.  - Specifications with no dependents are
+        common (more than 50%) so    avoid allocating a ``WeakKeyDictionary`` unless
+        we need it.  - Likewise, tagged values are relatively rare, so don''t allocate
+        a    dictionary to hold them until they are used.  - Use ``__slots___`` or
+        the C equivalent ``tp_members`` in more    common places. Note that this removes
+        the ability to set arbitrary    instance variables on certain objects.    See
+        `PR 155 <https://github.com/zopefoundation/zope.interface/pull/155>`_.  The
+        changes in this release resulted in a 7% memory reduction after  loading about
+        6,000 modules that define about 2,200 interfaces.  .. caution::     Details
+        of many private attributes have changed, and external use     of those private
+        attributes may break. In particular, the     lifetime and default value of
+        ``_v_attrs`` has changed.- Remove support for hashing uninitialized interfaces.
+        This could only  be done by subclassing ``InterfaceClass``. This has generated
+        a  warning since it was first added in 2011 (3.6.5). Please call the  ``InterfaceClass``
+        constructor or otherwise set the appropriate  fields in your subclass before
+        attempting to hash or sort it. See  `issue 157 <https://github.com/zopefoundation/zope.interface/issues/157>`_.-
+        Remove unneeded override of the ``__hash__`` method from  ``zope.interface.declarations.Implements``.
+        Watching a reindex index  process in ZCatalog with on a Py-Spy after 10k samples
+        the time for  ``.adapter._lookup`` was reduced from 27.5s to 18.8s (~1.5x
+        faster).  Overall reindex index time shrunk from 369s to 293s (1.26x faster).  See
+        `PR 161  <https://github.com/zopefoundation/zope.interface/pull/161>`_.- Make
+        the Python implementation closer to the C implementation by  ignoring all
+        exceptions, not just ``AttributeError``, during (parts  of) interface adaptation.
+        See `issue 163  <https://github.com/zopefoundation/zope.interface/issues/163>`_.-
+        Micro-optimization in ``.adapter._lookup`` , ``.adapter._lookupAll``  and
+        ``.adapter._subscriptions``: By loading ``components.get`` into  a local variable
+        before entering the loop a bytcode "LOAD_FAST 0  (components)" in the loop
+        can be eliminated. In Plone, while running  all tests, average speedup of
+        the "owntime" of ``_lookup`` is ~5x.  See `PR 167  <https://github.com/zopefoundation/zope.interface/pull/167>`_.-
+        Add ``__all__`` declarations to all modules. This helps tools that  do auto-completion
+        and documentation and results in less cluttered  results. Wildcard ("*") are
+        not recommended and may be affected. See  `issue 153  <https://github.com/zopefoundation/zope.interface/issues/153>`_.-
+        Fix ``verifyClass`` and ``verifyObject`` for builtin types like  ``dict``
+        that have methods taking an optional, unnamed argument with  no default value
+        like ``dict.pop``. On PyPy3, the verification is  strict, but on PyPy2 (as
+        on all versions of CPython) those methods  cannot be verified and are ignored.
+        See `issue 118  <https://github.com/zopefoundation/zope.interface/issues/118>`_.-
+        Update the common interfaces ``IEnumerableMapping``,  ``IExtendedReadMapping``,
+        ``IExtendedWriteMapping``,  ``IReadSequence`` and ``IUniqueMemberWriteSequence``
+        to no longer  require methods that were removed from Python 3 on Python 3,
+        such as  ``__setslice___``. Now, ``dict``, ``list`` and ``tuple`` properly  verify
+        as ``IFullMapping``, ``ISequence`` and ``IReadSequence,``  respectively on
+        all versions of Python.- Add human-readable ``__str___`` and ``__repr___``
+        to ``Attribute``  and ``Method``. These contain the name of the defining interface  and
+        the attribute. For methods, it also includes the signature.- Change the error
+        strings raised by ``verifyObject`` and  ``verifyClass``. They now include
+        more human-readable information  and exclude extraneous lines and spaces.
+        See `issue 170  <https://github.com/zopefoundation/zope.interface/issues/170>`_.  ..
+        caution:: This will break consumers (such as doctests) that               depended
+        on the exact error messages.- Make ``verifyObject`` and ``verifyClass`` report
+        all errors, if the  candidate object has multiple detectable violations. Previously
+        they  reported only the first error. See `issue  <https://github.com/zopefoundation/zope.interface/issues/171>`_.  Like
+        the above, this will break consumers depending on the exact  output of error
+        messages if more than one error is present.- Add ``zope.interface.common.collections``,  ``zope.interface.common.numbers``,
+        and ``zope.interface.common.io``.  These modules define interfaces based on
+        the ABCs defined in the  standard library ``collections.abc``, ``numbers``
+        and ``io``  modules, respectively. Importing these modules will make the  standard
+        library concrete classes that are registered with those  ABCs declare the
+        appropriate interface. See `issue 138  <https://github.com/zopefoundation/zope.interface/issues/138>`_.-
+        Add ``zope.interface.common.builtins``. This module defines  interfaces of
+        common builtin types, such as ``ITextString`` and  ``IByteString``, ``IDict``,
+        etc. These interfaces extend the  appropriate interfaces from ``collections``
+        and ``numbers``, and the  standard library classes implement them after importing
+        this module.  This is intended as a replacement for third-party packages like  `dolmen.builtins
+        <https://pypi.org/project/dolmen.builtins/>`_.  See `issue 138 <https://github.com/zopefoundation/zope.interface/issues/138>`_.-
+        Make ``providedBy()`` and ``implementedBy()`` respect ``super``  objects.
+        For instance, if class ``Derived`` implements ``IDerived``  and extends ``Base``
+        which in turn implements ``IBase``, then  ``providedBy(super(Derived, derived))``
+        will return ``[IBase]``.  Previously it would have returned ``[IDerived]``
+        (in general, it  would previously have returned whatever would have been returned  without
+        ``super``).  Along with this change, adapter registries will unpack ``super``  objects
+        into their ``__self___`` before passing it to the factory.  Together, this
+        means that ``component.getAdapter(super(Derived,  self), ITarget)`` is now
+        meaningful.  See `issue 11 <https://github.com/zopefoundation/zope.interface/issues/11>`_.-
+        Fix a potential interpreter crash in the low-level adapter  registry lookup
+        functions. See issue 11.- Adopt Python''s standard `C3 resolution order  <https://www.python.org/download/releases/2.3/mro/>`_
+        to compute the  ``__iro__`` and ``__sro__`` of interfaces, with tweaks to
+        support  additional cases that are common in interfaces but disallowed for  Python
+        classes. Previously, an ad-hoc ordering that made no  particular guarantees
+        was used.  This has many beneficial properties, including the fact that base  interface
+        and base classes tend to appear near the end of the  resolution order instead
+        of the beginning. The resolution order in  general should be more predictable
+        and consistent.  .. caution::     In some cases, especially with complex interface
+        inheritance     trees or when manually providing or implementing interfaces,
+        the     resulting IRO may be quite different. This may affect adapter     lookup.  The
+        C3 order enforces some constraints in order to be able to  guarantee a sensible
+        ordering. Older versions of zope.interface did  not impose similar constraints,
+        so it was possible to create  interfaces and declarations that are inconsistent
+        with the C3  constraints. In that event, zope.interface will still produce
+        a  resolution order equal to the old order, but it won''t be guaranteed  to
+        be fully C3 compliant. In the future, strict enforcement of C3  order may
+        be the default.  A set of environment variables and module constants allows  controlling
+        several aspects of this new behaviour. It is possible to  request warnings
+        about inconsistent resolution orders encountered,  and even to forbid them.
+        Differences between the C3 resolution order  and the previous order can be
+        logged, and, in extreme cases, the  previous order can still be used (this
+        ability will be removed in  the future). For details, see the documentation
+        for  ``zope.interface.ro``.- Make inherited tagged values in interfaces respect
+        the resolution  order (``__iro__``), as method and attribute lookup does.
+        Previously  tagged values could give inconsistent results. See `issue 190  <https://github.com/zopefoundation/zope.interface/issues/190>`_.-
+        Add ``getDirectTaggedValue`` (and related methods) to interfaces to  allow
+        accessing tagged values irrespective of inheritance. See  `issue 190  <https://github.com/zopefoundation/zope.interface/issues/190>`_.-
+        Ensure that ``Interface`` is always the last item in the ``__iro__``  and
+        ``__sro__``. This is usually the case, but if classes that do  not implement
+        any interfaces are part of a class inheritance  hierarchy, ``Interface`` could
+        be assigned too high a priority.  See `issue 8 <https://github.com/zopefoundation/zope.interface/issues/8>`_.-
+        Implement sorting, equality, and hashing in C for ``Interface``  objects.
+        In micro benchmarks, this makes those operations 40% to 80%  faster. This
+        translates to a 20% speed up in querying adapters.  Note that this changes
+        certain implementation details. In  particular, ``InterfaceClass`` now has
+        a non-default metaclass, and  it is enforced that ``__module__`` in instances
+        of  ``InterfaceClass`` is read-only.  See `PR 183 <https://github.com/zopefoundation/zope.interface/pull/183>`_.4.7.2
+        (2020-03-10)==================- Remove deprecated use of setuptools features.  See
+        `issue 30  <https://github.com/zopefoundation/zope.interface/issues/30>`_.4.7.1
+        (2019-11-11)==================- Use Python 3 syntax in the documentation.  See
+        `issue 119  <https://github.com/zopefoundation/zope.interface/issues/119>`_.4.7.0
+        (2019-11-11)==================- Drop support for Python 3.4.- Change ``queryTaggedValue``,
+        ``getTaggedValue``,  ``getTaggedValueTags`` in interfaces. They now include
+        inherited  values by following ``__bases__``. See `PR 144  <https://github.com/zopefoundation/zope.interface/pull/144>`_.  ..
+        caution:: This may be a breaking change.- Add support for Python 3.8.4.6.0
+        (2018-10-23)==================- Add support for Python 3.7- Fix ``verifyObject``
+        for class objects with staticmethods on  Python 3. See `issue 126  <https://github.com/zopefoundation/zope.interface/issues/126>`_.4.5.0
+        (2018-04-19)==================- Drop support for 3.3, avoid accidental dependence
+        breakage via setup.py.  See `PR 110 <https://github.com/zopefoundation/zope.interface/pull/110>`_.-
+        Allow registering and unregistering instance methods as listeners.  See `issue
+        12 <https://github.com/zopefoundation/zope.interface/issues/12>`_  and `PR
+        102 <https://github.com/zopefoundation/zope.interface/pull/102>`_.- Synchronize
+        and simplify zope/__init__.py. See `issue 114  <https://github.com/zopefoundation/zope.interface/issues/114>`_4.4.3
+        (2017-09-22)==================- Avoid exceptions when the ``__annotations__``
+        attribute is added to  interface definitions with Python 3.x type hints. See
+        `issue 98  <https://github.com/zopefoundation/zope.interface/issues/98>`_.-
+        Fix the possibility of a rare crash in the C extension when  deallocating
+        items. See `issue 100  <https://github.com/zopefoundation/zope.interface/issues/100>`_.4.4.2
+        (2017-06-14)==================- Fix a regression storing  ``zope.component.persistentregistry.PersistentRegistry``
+        instances.  See `issue 85 <https://github.com/zopefoundation/zope.interface/issues/85>`_.-
+        Fix a regression that could lead to the utility registration cache  of ``Components``
+        getting out of sync. See `issue 93  <https://github.com/zopefoundation/zope.interface/issues/93>`_.4.4.1
+        (2017-05-13)==================- Simplify the caching of utility-registration
+        data. In addition to  simplification, avoids spurious test failures when checking
+        for  leaks in tests with persistent registries. See `pull 84  <https://github.com/zopefoundation/zope.interface/pull/84>`_.-
+        Raise ``ValueError`` when non-text names are passed to adapter registry  methods:  prevents
+        corruption of lookup caches.4.4.0 (2017-04-21)==================- Avoid a
+        warning from the C compiler.  (https://github.com/zopefoundation/zope.interface/issues/71)-
+        Add support for Python 3.6.4.3.3 (2016-12-13)==================- Correct typos
+        and ReST formatting errors in documentation.- Add API documentation for the
+        adapter registry.- Ensure that the ``LICENSE.txt`` file is included in built
+        wheels.- Fix C optimizations broken on Py3k.  See the Python bug at:  http://bugs.python.org/issue15657  (https://github.com/zopefoundation/zope.interface/issues/60)4.3.2
+        (2016-09-05)==================- Fix equality testing of ``implementedBy``
+        objects and proxies.  (https://github.com/zopefoundation/zope.interface/issues/55)4.3.1
+        (2016-08-31)==================- Support Components subclasses that are not
+        hashable.  (https://github.com/zopefoundation/zope.interface/issues/53)4.3.0
+        (2016-08-31)==================- Add the ability to sort the objects returned
+        by ``implementedBy``.  This is compatible with the way interface classes sort
+        so they can  be used together in ordered containers like BTrees.  (https://github.com/zopefoundation/zope.interface/issues/42)-
+        Make ``setuptools`` a hard dependency of ``setup.py``.  (https://github.com/zopefoundation/zope.interface/issues/13)-
+        Change a linear algorithm (O(n)) in ``Components.registerUtility`` and  ``Components.unregisterUtility``
+        into a dictionary lookup (O(1)) for  hashable components. This substantially
+        improves the time taken to  manipulate utilities in large registries at the
+        cost of some  additional memory usage. (https://github.com/zopefoundation/zope.interface/issues/46)4.2.0
+        (2016-06-10)==================- Add support for Python 3.5- Drop support for
+        Python 2.6 and 3.2.4.1.3 (2015-10-05)==================- Fix installation
+        without a C compiler on Python 3.5  (https://github.com/zopefoundation/zope.interface/issues/24).4.1.2
+        (2014-12-27)==================- Add support for PyPy3.- Remove unittest assertions
+        deprecated in Python3.x.- Add ``zope.interface.document.asReStructuredText``,
+        which formats the  generated text for an interface using ReST double-backtick
+        markers.4.1.1 (2014-03-19)==================- Add support for Python 3.4.4.1.0
+        (2014-02-05)==================- Update ``boostrap.py`` to version 2.2.- Add
+        ``@named(name)`` declaration, that specifies the component name, so it  does
+        not have to be passed in during registration.4.0.5 (2013-02-28)==================-
+        Fix a bug where a decorated method caused false positive failures on  ``verifyClass()``.4.0.4
+        (2013-02-21)==================- Fix a bug that was revealed by porting zope.traversing.
+        During a loop, the  loop body modified a weakref dict causing a ``RuntimeError``
+        error.4.0.3 (2012-12-31)==================- Fleshed out PyPI Trove classifiers.4.0.2
+        (2012-11-21)==================- Add support for Python 3.3.- Restored ability
+        to install the package in the absence of ``setuptools``.- LP #1055223:  Fix
+        test which depended on dictionary order and failed randomly  in Python 3.3.4.0.1
+        (2012-05-22)==================- Drop explicit ``DeprecationWarnings`` for
+        "class advice" APIS (these  APIs are still deprecated under Python 2.x, and
+        still raise an exception  under Python 3.x, but no longer cause a warning
+        to be emitted under  Python 2.x).4.0.0 (2012-05-16)==================- Automated
+        build of Sphinx HTML docs and running doctest snippets via tox.- Deprecate
+        the "class advice" APIs from ``zope.interface.declarations``:  ``implements``,
+        ``implementsOnly``, and ``classProvides``.  In their place,  prefer the equivalent
+        class decorators: ``@implementer``,  ``@implementer_only``, and ``@provider``.  Code
+        which uses the deprecated  APIs will not work as expected under Py3k.- Remove
+        use of ''2to3'' and associated fixers when installing under Py3k.  The code
+        is now in a "compatible subset" which supports Python 2.6, 2.7,  and 3.2,
+        including PyPy 1.8 (the version compatible with the 2.7 language  spec).-
+        Drop explicit support for Python 2.4 / 2.5 / 3.1.- Add support for PyPy.-
+        Add support for continuous integration using ``tox`` and ``jenkins``.- Add
+        ''setup.py dev'' alias (runs ``setup.py develop`` plus installs  ``nose``
+        and ``coverage``).- Add ''setup.py docs'' alias (installs ``Sphinx`` and dependencies).-
+        Replace all unittest coverage previously accomplished via doctests with  unittests.  The
+        doctests have been moved into a ``docs`` section, managed  as a Sphinx collection.-
+        LP #910987:  Ensure that the semantics of the ``lookup`` method of  ``zope.interface.adapter.LookupBase``
+        are the same in both the C and  Python implementations.- LP #900906:  Avoid
+        exceptions due to tne new ``__qualname__`` attribute  added in Python 3.3
+        (see PEP 3155 for rationale).  Thanks to Antoine  Pitrou for the patch.3.8.0
+        (2011-09-22)==================- New module ``zope.interface.registry``.  This
+        is code moved from  ``zope.component.registry`` which implements a basic nonperistent
+        component  registry as ``zope.interface.registry.Components``.  This class
+        was moved  from ``zope.component`` to make porting systems (such as Pyramid)
+        that rely  only on a basic component registry to Python 3 possible without
+        needing to  port the entirety of the ``zope.component`` package.  Backwards  compatibility
+        import shims have been left behind in ``zope.component``, so  this change
+        will not break any existing code.- New ``tests_require`` dependency: ``zope.event``
+        to test events sent by  Components implementation.  The ``zope.interface``
+        package does not have a  hard dependency on ``zope.event``, but if ``zope.event``
+        is importable, it  will send component registration events when methods of
+        an instance of  ``zope.interface.registry.Components`` are called.- New interfaces
+        added to support ``zope.interface.registry.Components``  addition: ``ComponentLookupError``,
+        ``Invalid``, ``IObjectEvent``,  ``ObjectEvent``, ``IComponentLookup``, ``IRegistration``,  ``IUtilityRegistration``,
+        ``IAdapterRegistration``,  ``ISubscriptionAdapterRegistration``, ``IHandlerRegistration``,  ``IRegistrationEvent``,
+        ``RegistrationEvent``, ``IRegistered``,  ``Registered``, ``IUnregistered``,
+        ``Unregistered``,  ``IComponentRegistry``, and ``IComponents``.- No longer
+        Python 2.4 compatible (tested under 2.5, 2.6, 2.7, and 3.2).3.7.0 (2011-08-13)==================-
+        Move changes from 3.6.2 - 3.6.5 to a new 3.7.x release line.3.6.7 (2011-08-20)==================-
+        Fix sporadic failures on x86-64 platforms in tests of rich comparisons  of
+        interfaces.3.6.6 (2011-08-13)==================- LP #570942:  Now correctly
+        compare interfaces  from different modules but  with the same names.  N.B.:
+        This is a less intrusive / destabilizing fix than the one applied in  3.6.3:  we
+        only fix the underlying cmp-alike function, rather than adding  the other
+        "rich comparison" functions.- Revert to software as released with 3.6.1 for
+        "stable" 3.6 release branch.3.6.5 (2011-08-11)==================- LP #811792:  work
+        around buggy behavior in some subclasses of  ``zope.interface.interface.InterfaceClass``,
+        which invoke ``__hash__``  before initializing ``__module__`` and ``__name__``.  The
+        workaround  returns a fixed constant hash in such cases, and issues a ``UserWarning``.-
+        LP #804832:  Under PyPy, ``zope.interface`` should not build its C  extension.  Also,
+        prevent attempting to build it under Jython.- Add a tox.ini for easier xplatform
+        testing.- Fix testing deprecation warnings issued when tested under Py3K.3.6.4
+        (2011-07-04)==================- LP 804951:  InterfaceClass instances were
+        unhashable under Python 3.x.3.6.3 (2011-05-26)==================- LP #570942:  Now
+        correctly compare interfaces  from different modules but  with the same names.3.6.2
+        (2011-05-17)==================- Moved detailed documentation out-of-line from
+        PyPI page, linking instead to  http://docs.zope.org/zope.interface .- Fixes
+        for small issues when running tests under Python 3.2 using  ``zope.testrunner``.-
+        LP # 675064:  Specify return value type for C optimizations module init  under
+        Python 3:  undeclared value caused warnings, and segfaults on some  64 bit
+        architectures.- setup.py now raises RuntimeError if you don''t have Distutils
+        installed when  running under Python 3.3.6.1 (2010-05-03)==================-
+        A non-ASCII character in the changelog made 3.6.0 uninstallable on  Python
+        3 systems with another default encoding than UTF-8.- Fix compiler warnings
+        under GCC 4.3.3.3.6.0 (2010-04-29)==================- LP #185974:  Clear the
+        cache used by ``Specificaton.get`` inside  ``Specification.changed``.  Thanks
+        to Jacob Holm for the patch.- Add support for Python 3.1. Contributors:    Lennart
+        Regebro    Martin v Loewis    Thomas Lotze    Wolfgang Schnerring  The 3.1
+        support is completely backwards compatible. However, the implements  syntax
+        used under Python 2.X does not work under 3.X, since it depends on  how metaclasses
+        are implemented and this has changed. Instead it now supports  a decorator
+        syntax (also under Python 2.X)::    class Foo:        implements(IFoo)        ...  can
+        now also be written::    @implementer(IFoo):    class Foo:        ...  There
+        are 2to3 fixers available to do this change automatically in the  zope.fixers
+        package.- Python 2.3 is no longer supported.3.5.4 (2009-12-23)==================-
+        Use the standard Python doctest module instead of zope.testing.doctest, which  has
+        been deprecated.3.5.3 (2009-12-08)==================- Fix an edge case: make
+        providedBy() work when a class has ''__provides__'' in  its __slots__ (see
+        http://thread.gmane.org/gmane.comp.web.zope.devel/22490)3.5.2 (2009-07-01)==================-
+        BaseAdapterRegistry.unregister, unsubscribe: Remove empty portions of  the
+        data structures when something is removed.  This avoids leaving  references
+        to global objects (interfaces) that may be slated for  removal from the calling
+        application.3.5.1 (2009-03-18)==================- verifyObject: use getattr
+        instead of hasattr to test for object attributes  in order to let exceptions
+        other than AttributeError raised by properties  propagate to the caller- Add
+        Sphinx-based documentation building to the package buildout  configuration.
+        Use the ``bin/docs`` command after buildout.- Improve package description
+        a bit. Unify changelog entries formatting.- Change package''s mailing list
+        address to zope-dev at zope.org as  zope3-dev at zope.org is now retired.3.5.0
+        (2008-10-26)==================- Fix declaration of _zope_interface_coptimizations,
+        it''s not a top level  package.- Add a DocTestSuite for odd.py module, so
+        their tests are run.- Allow to bootstrap on Jython.- Fix https://bugs.launchpad.net/zope3/3.3/+bug/98388:
+        ISpecification  was missing a declaration for __iro__.- Add optional code
+        optimizations support, which allows the building  of C code optimizations
+        to fail (Jython).- Replace `_flatten` with a non-recursive implementation,
+        effectively making  it 3x faster.3.4.1 (2007-10-02)==================- Fix
+        a setup bug that prevented installation from source on systems  without setuptools.3.4.0
+        (2007-07-19)==================- Final release for 3.4.0.3.4.0b3 (2007-05-22)====================-
+        When checking whether an object is already registered, use identity  comparison,
+        to allow adding registering with picky custom comparison methods.3.3.0.1 (2007-01-03)====================-
+        Made a reference to OverflowWarning, which disappeared in Python  2.5, conditional.3.3.0
+        (2007/01/03)==================New Features------------- Refactor the adapter-lookup
+        algorithim to make it much simpler and faster.  Also, implement more of the
+        adapter-lookup logic in C, making  debugging of application code easier, since
+        there is less  infrastructre code to step through.- Treat objects without
+        interface declarations as if they  declared that they provide ``zope.interface.Interface``.-
+        Add a number of richer new adapter-registration interfaces  that provide greater
+        control and introspection.- Add a new interface decorator to zope.interface
+        that allows the  setting of tagged values on an interface at definition time
+        (see  zope.interface.taggedValue).Bug Fixes---------- A bug in multi-adapter
+        lookup sometimes caused incorrect adapters to  be returned.3.2.0.2 (2006-04-15)====================-
+        Fix packaging bug:  ''package_dir'' must be a *relative* path.3.2.0.1 (2006-04-14)====================-
+        Packaging change:  suppress inclusion of ''setup.cfg'' in ''sdist'' builds.3.2.0
+        (2006-01-05)==================- Corresponds to the version of the zope.interface
+        package shipped as part of  the Zope 3.2.0 release.3.1.0 (2005-10-03)==================-
+        Corresponds to the version of the zope.interface package shipped as part of  the
+        Zope 3.1.0 release.- Made attribute resolution order consistent with component
+        lookup order,  i.e. new-style class MRO semantics.- Deprecate ''isImplementedBy''
+        and ''isImplementedByInstancesOf'' APIs in  favor of ''implementedBy'' and
+        ''providedBy''.3.0.1 (2005-07-27)==================- Corresponds to the version
+        of the zope.interface package shipped as part of  the Zope X3.0.1 release.-
+        Fix a bug reported by James Knight, which caused adapter registries  to fail
+        occasionally to reflect declaration changes.3.0.0 (2004-11-07)==================-
+        Corresponds to the version of the zope.interface package shipped as part of  the
+        Zope X3.0.0 release.'
+      Package: zope.interface
+      Source: pip
+      Version: '6.1'
+      Hash: ''
+      licenses:
+      - ZPL-2.1
+      Title: zope.interface
+      DownloadURL: https://files.pythonhosted.org/packages/87/03/6b85c1df2dca1b9acca38b423d1e226d8ffdf30ebd78bcb398c511de8b54/zope.interface-6.1.tar.gz
+  bazaar:
+    register: 'no'
+    prim: 16/CAX1058540
+    community_link: https://github.com/zopefoundation/zope.interface
+    community_name: https://github.com/zopefoundation/zope.interface
+    community_url: https://github.com/zopefoundation/zope.interface
+    component_comment: ''
+    component_highlevel_description: Interfaces for Python
+    component_name: zope.interface
+    component_platform: linux
+    component_programing_language: Python
+    component_version: '6.1'
+    licenses:
+    - FAL1159237/21 (Zope Public License 2.1 (ZPL-2.1))
+    src_download_link: https://github.com/zopefoundation/zope.interface/archive/refs/tags/6.1.tar.gz
+    stako_decision_reason: automatic
+    stako: ESW2
+    stako_comment: ''
+    bazaarurl: https://scas.internal.ericsson.com/search3pp?id=1064922&id-filter=equals&rowDisplay=Card-Simple
+    recode: ''
+    retext: ''
+    country: United States
+    crypto: ''
+    programming_language: Python
+  encryptions:
+    used:
+    - ''
+  evms:
+    register: 'yes'
+    product_name: zope.interface
+    target_sw: linux
+    vendor: pip
+    version: '6.1'
+    web_url: https://github.com/zopefoundation/zope.interface
+  licenses:
+  - ZPL-2.1
+  name: zope.interface
+  primary:
+  - this
+  subcomponent: false
+  type: FOSS
+  versions:
+  - '6.1'
+  mimer:
+    linking: Static
+    product_number: CAX1058540
+    product_version_label: '6.1'
+    obligation: Including the full license text in a prominent place with the software
+      when the FOSS is distributed
+    usage: Use as is
+    primary: 'True'
+  alerts:
+  - Stako is 'ESW3', BAZAAR/SCAS component is not recommended to be used

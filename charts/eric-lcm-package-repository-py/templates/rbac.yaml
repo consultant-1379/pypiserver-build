@@ -1,0 +1,56 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "eric-lcm-package-repository-py.name" . }}-role
+  labels:
+    {{- include "eric-lcm-package-repository-py.labels" . | nindent 4 }}
+  annotations:
+    {{- include "eric-lcm-package-repository-py.annotations" . | nindent 4 }}
+rules:
+  - apiGroups: [""]       # "" indicates the core API group
+    resources: ["pods", "persistentvolumeclaims", "secrets", "services"]
+    verbs: ["get", "watch", "list", "create", "delete"]
+  - apiGroups: [""]       # "" indicates the core API group
+    resources: ["events"]
+    verbs: ["get", "watch", "list"]
+---
+{{ if .Values.global -}}
+  {{- if .Values.global.security -}}
+    {{- if .Values.global.security.policyBinding -}}
+      {{- if .Values.global.security.policyBinding.create -}}
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "eric-lcm-package-repository-py.name" . }}-role-binding
+  labels:
+    {{- include "eric-lcm-package-repository-py.labels" . | nindent 4 }}
+  annotations:
+    {{- include "eric-lcm-package-repository-py.annotations" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "eric-lcm-package-repository-py.serviceAccountName" . }}
+    namespace: "{{ .Release.Namespace }}"
+roleRef:
+  kind: Role
+  name: {{ include "eric-lcm-package-repository-py.fullname" . }}
+  apiGroup: rbac.authorization.k8s.io
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}  

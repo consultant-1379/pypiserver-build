@@ -1,0 +1,54 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+documents:
+    - name: "Service User Guide"
+      filepath: build/docs/html/User_Guide.zip
+      default: true
+    - name: "Inner Source README"
+      filepath: build/docs/html/Inner_Source_README.zip
+    - name: "Contributing Guideline"
+      filepath: build/docs/html/Contributing_Guideline.zip  
+    - name: "Characteristics Summary Report"
+      filepath: build/docs/Characteristics-Report/characteristics_report.html
+    - name: "Software Vendor List (SVL)"
+      filepath: build/svl/svl.zip
+    - name: "Product Revision Information (PRI)"
+      external-link:
+          Title: "{Product_Revision_Information_Title}"
+          Document_id: "109 21-APR"
+          Rev: "{Product_Revision_Information_Revision}"
+    - name: "Test Specification"
+      external-link:
+          Title: "{Test_Specification_Title}"
+          Document_id: "1/152 41-APR"
+          Rev: "{Test_Specification_Revision}"
+    - name: "Test Report"
+      external-link:
+          Title: "{Test_Report_Title}"
+          Document_id: "1/152 83-APR"
+          Rev: "{Test_Report_Revision}"
+    - name: "Risk Assessment & Privacy Impact Assessment"
+      external-link:
+          Title: "{Risk_Assessment_Title}"
+          Document_id: "1/006 64-APR"
+          Rev: "{Risk_Assessment_Revision}"
+      restricted: true
+    - name: "Vulnerability Analysis Report"
+      external-link:
+          Title: "{Vulnerability_Analysis_Report_Title}"
+          Document_id: "1/1597-APR"
+          Rev: "{Vulnerability_Analysis_Report_Revision}"
+      restricted: true  

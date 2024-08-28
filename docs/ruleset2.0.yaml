@@ -1,0 +1,115 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+modelVersion: 2.0
+description: "Python Package Repository Documentations"
+
+# See image catalog: https://eteamspace.internal.ericsson.com/pages/viewpage.action?spaceKey=ACD&title=ADP+CICD+Docker+Image+Catalog
+docker-images:
+    - adp-doc-builder: armdocker.rnd.ericsson.se/proj-adp-cicd-drop/bob-docbuilder:${env.DOC_BUILDER_TAG}
+    - adp-release-auto: armdocker.rnd.ericsson.se/proj-adp-cicd-drop/bob-adp-release-auto:${env.RELEASE_AUTO_TAG}
+
+import:
+    properties: ../rulesets/common-properties.yaml
+
+# import environment variables (For example: Jenkins parameters)
+env:
+    - PWD
+    - HOME
+    - BUILD_PHASE (default=ci-internal)
+    - DOC_BUILDER_TAG (default=latest)
+    - RELEASE_AUTO_TAG (default=latest)
+    - SELI_ARTIFACTORY_REPO_API_KEY
+
+var:
+   - version
+
+properties:
+      # Documentation Drop repo full URL
+    - documentation-drop-repo: ${properties.helm-chart-repo-server-path}-docs-dev-generic-local
+      # Documentation Indevelopment Path
+    - documentation-ci-internal-path: ${documentation-drop-repo}/${properties.helm-chart-name}
+      # Documentation Drop Path
+    - documentation-drop-path: ${documentation-drop-repo}/${properties.helm-chart-name}/drop
+
+    - service-ports-source-file-path: docs/fragments/service-ports.json
+    # Directory for the User Guide (UG) Markdown fragments generated from structured data modules
+    - generated-ug-fragments-dir: ${env.PWD}/build/markdown/fragments/.generated
+
+    - characteristics-report-dir: "build/docs/Characteristics-Report"
+      # characteristics report JSON source file path
+    - characteristics-report-source-file-path: docs/fragments/characteristics-report.json
+
+
+# Rules to execute
+rules:
+
+  clean:
+    - task: clean
+      cmd: rm -rf ./build/docs
+
+  lint:
+    - task: md-lint
+      docker-image: adp-doc-builder
+      cmd: markdownlint --config /etc/markdownlint-cli/adp.yaml $(git ls-files -- \docs\*.md | cat | xargs)
+
+  build:
+    - task: service-ports-md-fragment
+      docker-image: adp-release-auto
+      cmd:
+        - mkdir -p ${generated-ug-fragments-dir}
+        - service-ports generate-markdown
+          --json ${service-ports-source-file-path}
+          --output ${generated-ug-fragments-dir}/service_ports.md
+    - task: characteristics-report
+      docker-image: adp-release-auto
+      cmd:
+        - mkdir -p ${characteristics-report-dir}
+        - characteristics-report generate
+            -f ${characteristics-report-source-file-path}
+            -out ${characteristics-report-dir}
+            -url ${documentation-drop-path}/documents        
+    - task: md-generate
+      docker-image: adp-release-auto
+      cmd: doc-handler generate
+            --config docs/config/marketplace_config.config
+            --output ./build/docs/html
+            --format html
+            --zip
+    - task: pdf-generate
+      docker-image: adp-release-auto
+      cmd: doc-handler generate
+              --config docs/config/marketplace_config.config
+              --output ./build/docs/pdf
+              --format pdf
+              --stylesheet /usr/share/marketplace/resources/pdf_style.css          
+
+  publish:
+    - task: indevelop
+      docker-image: adp-release-auto
+      cmd: marketplace upload
+            --arm-api-token ${env.SELI_ARTIFACTORY_REPO_API_KEY}
+            --arm-url ${documentation-ci-internal-path}
+            --config docs/config/marketplace_indevelop_upload_config.yaml
+            --debug
+            --dev
+    - task: drop
+      docker-image: adp-release-auto
+      cmd: marketplace upload
+            --arm-api-token ${env.SELI_ARTIFACTORY_REPO_API_KEY}
+            --arm-url ${documentation-drop-path}
+            --config docs/config/marketplace_indevelop_upload_config.yaml
+            --version=${var.version}

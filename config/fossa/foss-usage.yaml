@@ -1,0 +1,98 @@
+
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+modelVersion: 2.0
+fosses:
+  - product_number: CAX1056535
+    license: MIT
+    obligation: |
+      "Including the full license text in a prominent place with the software when the FOSS is distributed.
+      This fulfills, The MIT copyright notice and the MIT permission notices shall be included in all copies or
+      substantial portions of the software (in whatever format, either in binary or in source)"
+    usage: |
+      "Lightweight in-process concurrent programming"
+  - product_number: CAX1056964
+    license: BSD-3-Clause
+    obligation: |
+      "Including the full license text in a prominent place with the software when the FOSS is distributed. 
+      This fulfills the following: Redistributions of source code must retain the above copyright notice, this list of conditions and the license disclaimer.
+      Redistributions in binary form must reproduce the copyright notice, this list of conditions and the disclaimer in the documentation and/or
+      other materials provided with the distribution"
+    usage: |
+      "comprehensive password hashing framework supporting over 30 schemes
+      Passlib is a password hashing library for Python 2 & 3, which provides
+      cross-platform implementations of over 30 password hashing algorithms, as well
+      as a framework for managing existing password hashes. It's designed to be useful
+      for a wide range of tasks, from verifying a hash found in /etc/shadow, to
+      providing full-strength password hashing for multi-user applications."
+  - product_number: CAX1057411
+    license: MIT
+    obligation: |
+      "Including the full license text in a prominent place with the software when the FOSS is distributed.
+      This fulfills, The MIT copyright notice and the MIT permission notices shall be included in all copies or
+      substantial portions of the software (in whatever format, either in binary or in source)"
+    usage: |
+      "Gunicorn 'Green Unicorn' is a Python WSGI HTTP Server for UNIX. It's a pre-fork worker model ported from Ruby's Unicorn project."
+  - product_number: CAX1057438
+    license: MIT
+    obligation: |
+      "Including the full license text in a prominent place with the software when the FOSS is distributed.
+      This fulfills, The MIT copyright notice and the MIT permission notices shall be included in all copies or
+      substantial portions of the software (in whatever format, either in binary or in source)"
+    usage: |
+      "gevent is a coroutine-based Python networking library that uses greenlet to provide a high-level synchronous API on top of the libev event loop."
+  - product_number: CAX1058014
+    license: Apache-2.0
+    obligation: |
+      "Including the full license text in a prominent place with the software when the FOSS is distributed.
+      This fulfills the following: Ericsson must give any recipients of the software a copy of the Apache License.
+      Ericsson must cause any modified files to carry prominent notices stating that Ericsson changed the files.
+      In any source form Ericsson distributes, all copyright, patent, trademark and attribution notices must be retained.
+      If the software includes a NOTICE text file as part of its distribution,
+      then any derivative work Ericsson distributes must include a readable copy of the attribution notices contained within such NOTICE file."
+    usage: |
+      "Python library and shell utilities to monitor filesystem events."
+  - product_number: CTX1020778
+    license: Apache-2.0
+    obligation: |
+      "Including the full license text in a prominent place with the software when the FOSS is distributed.
+      This fulfills the following: Ericsson must give any recipients of the software a copy of the Apache License.
+      Ericsson must cause any modified files to carry prominent notices stating that Ericsson changed the files.
+      In any source form Ericsson distributes, all copyright, patent, trademark and attribution notices must be retained.
+      If the software includes a NOTICE text file as part of its distribution,
+      then any derivative work Ericsson distributes must include a readable copy of the attribution notices contained within such NOTICE file."
+    usage: |
+      "Core utilities for Python packages"
+  - product_number: CTX1023008
+    license: Apache-2.0
+    obligation: |
+      "Including the full license text in a prominent place with the software when the FOSS is distributed.
+      This fulfills the following: Ericsson must give any recipients of the software a copy of the Apache License.
+      Ericsson must cause any modified files to carry prominent notices stating that Ericsson changed the files.
+      In any source form Ericsson distributes, all copyright, patent, trademark and attribution notices must be retained.
+      If the software includes a NOTICE text file as part of its distribution,
+      then any derivative work Ericsson distributes must include a readable copy of the attribution notices contained within such NOTICE file."
+    usage: |
+      "Modern(-ish) password hashing for your software and your servers"
+  - product_number: CTX1028540
+    license: MIT
+    obligation: |
+      "Including the full license text in a prominent place with the software when the FOSS is distributed.
+      This fulfills, The MIT copyright notice and the MIT permission notices shall be included in all copies or
+      substantial portions of the software (in whatever format, either in binary or in source)"
+    usage: |
+      "Minimal PyPI server for uploading & downloading packages with pip/easy_install"

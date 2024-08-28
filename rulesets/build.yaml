@@ -1,0 +1,298 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+modelVersion: 2.0
+
+description: "AI/ML LibraryManager Build Tasks"
+
+# See image catalog: https://confluence.lmera.ericsson.se/display/ACD/ADP+CICD+Docker+Image+Catalog
+docker-images:
+    - adp-maven-builder: armdocker.rnd.ericsson.se/proj-adp-cicd-drop/bob-java11mvnbuilder:${env.MVN_BUILDER_TAG}
+    - adp-release-auto: armdocker.rnd.ericsson.se/proj-adp-cicd-drop/bob-adp-release-auto:${env.RELEASE_AUTO_TAG}
+    - adp-image-dr-check: armdocker.rnd.ericsson.se/proj-adp-cicd-drop/adp-image-dr-check:${env.IMAGE_DR_CHECK_TAG}
+    - adp-helm-dr-check: armdocker.rnd.ericsson.se/proj-adp-cicd-drop/common-library-adp-helm-dr-check:${env.HELM_DR_CHECK_TAG}
+    - ci-toolkit: armdocker.rnd.ericsson.se/proj-mxe-ci-internal/ci-toolkit:${env.CI_TOOLKIT_TAG}
+
+import:
+    common: common-properties.yaml
+
+properties:
+    - disabled-helm-design-rules: "-DhelmDesignRule.config.DR-D1123-120=disable -DhelmDesignRule.config.DR-D1123-127=disable -DhelmDesignRule.config.DR-D1123-124=disable"
+    - specific-helm-design-rules: "-DhelmDesignRule.config.rulesToExecute=DR-D1123-134"
+    - disabled-images-design-rules: "-DimageDesignRule.config.DR-D470203-041-A=disable -DimageDesignRule.config.DR-D470203-050-A=disable"
+    # Reports
+    - dr-checkers-report-path: build/checker-reports
+    - helm-checker-report-path: ${dr-checkers-report-path}/charts/
+    - image-checker-report-path: ${dr-checkers-report-path}/image/
+    - pypiserver-version: v1.5.2
+    - pypiserver-repo-url: ssh://gerrit.ericsson.se:29418/MXE/mlops-3pps/pypiserver
+    - ml-library-manager-repo-url: ssh://gerrit.ericsson.se:29418/MXE/ml-library-manager
+    - ml-library-manager-path: .bob/ml-library-manager
+    - ml-library-manager-version: master
+    - changed-files: ${env.PWD}/.bob/changed-files.txt
+
+env:
+    - HOME
+    - PWD
+
+    # Docker
+    - DOCKER_NETWORK (default=--network host)
+    - BUILDKIT_PROGRESS (default=plain)
+    - DOCKER_BUILDKIT (default=1)
+
+    # Default docker image tags
+    - MVN_BUILDER_TAG (default=latest)
+    - RELEASE_AUTO_TAG (default=latest)
+    - IMAGE_DR_CHECK_TAG (default=latest)
+    - HELM_DR_CHECK_TAG (default=latest)
+    - GO_BUILDER_TAG (default=latest)
+    - CI_TOOLKIT_TAG (default=latest)
+
+    # Credentials
+    - CREDENTIALS_SELI_ARTIFACTORY_USR
+    - CREDENTIALS_SELI_ARTIFACTORY_PSW
+    - SELI_ARTIFACTORY_REPO_USER (default=${env.CREDENTIALS_SELI_ARTIFACTORY_USR})
+    - SELI_ARTIFACTORY_REPO_PASS (default=${env.CREDENTIALS_SELI_ARTIFACTORY_PSW})
+    - SELI_ARTIFACTORY_REPO_API_KEY
+    - GERRIT_USERNAME
+    - GERRIT_PASSWORD
+    - EMAIL (default=mxecifunc@ericsson.com)
+    - SERO_ARTIFACTORY_REPO_API_KEY #SERO ARM KEY for CBOS Check
+    - SERO_ARM_USER (default=mxecifunc)
+
+    # Build Parameters
+    - MAVEN_OPTS (default=-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn)
+    - MAVEN_CLI_OPTS (default=-Duser.home=${env.HOME} -B)
+    - DOCKER_VOLUME_MAPPING_PASSWD (default=--volume ${env.HOME}/mypasswd:/etc/passwd:ro)
+    - GERRIT_CHANGE_NUMBER
+
+    # Go
+    - GO111MODULE (default="on")
+    - CGO_ENABLED (default="on")
+    - GOOS (default="linux")
+    - GO_ARCH (default="amd64")
+    - GOPATH (default="$PWD/build/go")
+
+    ##Service params
+    #MTLS
+    - TLS_ENABLED (default=true)
+    - SERVICEMESH_ENABLED (default=true)
+
+var:
+    - image-full-name-internal
+    - image-full-name
+    - version
+    - commithash
+    - rstate
+    - helm-chart-repo-internal
+    - image-repopath-drop
+    - version-prefix
+    - image-repopath-internal
+    - image-dr-vm-args
+    - helm-chart-check-report-warnings
+    - cbos-version
+    - cbos-semver
+
+rules:
+    # Clean workspace
+    clean:
+        - task: rm
+          cmd:
+              - rm -rf build/
+
+    init:
+        - task: image-dr-vm-args
+          cmd: echo ${disabled-images-design-rules} > .bob/var.image-dr-vm-args
+
+    lint-license-check:
+        - task: license-check
+          docker-image: ci-toolkit
+          docker-flags: 
+              - ${env.DOCKER_NETWORK}
+              - "--env HOME=${env.HOME}"
+              - "--volume ${env.HOME}:${env.HOME}"      
+          cmd: ${env.PWD}/ci/scripts/license_check.sh "${env.PWD}/config/license-header.txt" "bob,.bob,mlops-utils"
+    
+    add-missing-license:
+        - task: license-check
+          docker-image: adp-maven-builder
+          docker-flags: 
+              - ${env.DOCKER_NETWORK}
+              - "--env HOME=${env.HOME}"
+              - "--volume ${env.HOME}:${env.HOME}"      
+          cmd: mvn -X license:format
+
+    lint-helm:
+        - task: helm
+          docker-image: adp-helm-dr-check
+          docker-flags:
+              - "--env ENABLE_HELM_V3=true"
+              - ${env.DOCKER_NETWORK}
+          cmd: helm3 lint charts/${common.helm-chart-name}
+
+    # Build a docker image pointing to dirty repository
+    image-pypiserver:
+        - task: docker-build-pypiserver
+          cmd:
+              #- ${env.PWD}/ci/scripts/clone.sh --repoURL ${pypiserver-repo-url} --version ${pypiserver-version} --clone-to ${common.pypiserver-path}
+              - docker build ${env.PWD}/ ${env.DOCKER_NETWORK}
+                --file ${env.PWD}/images/pypiserver/Dockerfile
+                --tag ${var.image-full-name-internal}:${var.version}
+                --target pypiserver
+                --build-arg CBO_VERSION=${common.common-base-os-version}
+                --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+                --build-arg COMMIT=${var.commithash}
+                --build-arg APP_VERSION=${var.version}
+                --build-arg RSTATE=${var.rstate}
+                --build-arg IMAGE_PRODUCT_NUMBER=${common.pypiserver-image-product-number}
+                --build-arg IMAGE_PRODUCT_TITLE="${common.docker-image-title} PyPiServer"
+                --build-arg PYPISERVER_VERSION=${pypiserver-version}
+                --build-arg USER=149101
+
+        
+        - task: cbo-check
+          docker-image: adp-release-auto
+          docker-in-docker: socket
+          docker-envs:
+              - ARM_API_TOKEN
+              - SERO_ARM_TOKEN
+          docker-flags:
+              - --user root
+          cmd: 
+            - echo "COMMENTED OUT FOR RELEASE" #cbo-check --debug --image "${var.image-full-name-internal}:${var.version}" --report ${image-checker-report-path} --arm-apikey ${env.SELI_ARTIFACTORY_REPO_API_KEY}
+
+    image-dr-check:
+        - task: pypiserver-image
+          docker-image: adp-image-dr-check
+          docker-in-docker: socket
+          cmd: image-dr-check --image ${var.image-full-name-internal}:${var.version} --output ${image-checker-report-path}/${image-full-name} ${disabled-images-design-rules}
+
+    # Push image to ci-internal repo and create local version of helm chart
+    image-push-internal:
+        - task: image-push-internal
+          cmd:
+            - docker push ${var.image-full-name-internal}:${var.version}
+
+    image-push:
+        - task: pull-internal
+          cmd:
+              - docker push ${var.image-full-name-internal}:${var.version}
+
+        - task: tag-public
+          cmd:
+              - docker tag ${var.image-full-name-internal}:${var.version} ${var.image-full-name}:${var.version}
+              
+        - task: push-public
+          cmd:
+              - docker push ${var.image-full-name}:${var.version}
+
+    # Delete docker images created
+    image-delete-internal:
+        - task: delete-internal-image
+          cmd:
+              - docker image remove ${var.image-full-name-internal}:${var.version} $(docker images -f "dangling=true" -q) || true
+
+    image-delete-drop:
+        - task: delete-drop-image
+          cmd:
+              - docker image remove ${common.image-full-name}:${var.version} $(docker images -f "dangling=true" -q) || true
+    
+    helm-package:
+        - task: package-helm-internal
+          docker-image: adp-release-auto
+          docker-flags:
+              - ${env.DOCKER_NETWORK}
+              - "--env ENABLE_HELM_V3=true"
+          cmd:
+              - mkdir -p ${common.helm-chart-dir}
+              - helm-package
+                --folder charts/${common.helm-chart-name}
+                --workdir .bob --output ${common.helm-chart-dir}
+                --version ${var.version}
+                --helm-user ${env.SELI_ARTIFACTORY_REPO_USER}
+                --arm-api-token ${env.SELI_ARTIFACTORY_REPO_API_KEY}
+                --replace eric-product-info.yaml:VERSION=${var.version}
+                --replace eric-product-info.yaml:REPO_PATH=${var.image-repopath-internal}
+                --replace eric-product-info.yaml:MAIN_IMAGE_NAME=${common.docker-image-name}
+                
+
+    helm-dr-check:
+        - task: prepare-values 
+          cmd: bash -c '''
+             set -ex;
+             sed -i "s|TLS_ENABLED|${env.TLS_ENABLED}|g;s|SERVICEMESH_ENABLED|${env.SERVICEMESH_ENABLED}|g" ${env.PWD}/ci/values/dr-check-values.yaml;'''
+        - task: helm-chart-check
+          docker-image: adp-helm-dr-check
+          cmd: helm-dr-check --helm-chart ${common.helm-chart-localpath} ${disabled-helm-design-rules} --helm-v3 --values-file ${env.PWD}/ci/values/dr-check-values.yaml --output ${helm-checker-report-path}
+        # cmd: helm-dr-check --helm-chart ${common.helm-chart-localpath} ${specific-helm-design-rules} ${disabled-helm-design-rules} --helm-v3 --values-file ${env.PWD}/ci/values/dr-check-values.yaml --output ${helm-checker-report-path}
+        - task: helm-chart-check-report-warnings
+          cmd:
+              - if grep -q ">WARNING<" ${helm-checker-report-path}design-rule-check-report.xml; then
+                echo true > .bob/var.helm-chart-check-report-warnings;
+                else
+                echo false > .bob/var.helm-chart-check-report-warnings;
+                fi
+
+
+    # Creating json schema - DR: DR-D1121-210
+    helm-scheme-creation:
+        - task: generate-json-schema
+          docker-image: ci-toolkit
+          cmd:
+          - bash ci/scripts/json-schema-generator.sh eric-lcm-package-repository-py eric-lcm-package-repository-py-schema.properties
+          docker-flags:
+            - "--user root"   
+    helm-upload-internal:
+        - task: helm-upload-internal
+          docker-image: adp-release-auto
+          docker-flags:
+              - ${env.DOCKER_NETWORK}
+              - "--env ENABLE_HELM_V3=true"
+          cmd: upload_file.sh
+              --filename=${common.helm-chart-localpath}
+              --repository=${var.helm-chart-repo-internal}/${common.helm-chart-name}
+              --api-token=${env.SELI_ARTIFACTORY_REPO_API_KEY}
+
+    # Publish docker images and helm charts to drop repository
+    # Call publish only when merged to master
+    helm-package-publish:
+        - task: package-helm-public
+          docker-image: adp-release-auto
+          docker-flags:
+              - ${env.DOCKER_NETWORK}
+              - "--env ENABLE_HELM_V3=true"
+          cmd: helm-package
+              --folder charts/${common.helm-chart-name}
+              --workdir .bob --output ${common.helm-chart-dir}
+              --version ${var.version}
+              --replace VERSION=${var.version}
+              --helm-user ${env.SELI_ARTIFACTORY_REPO_USER}
+              --arm-api-token ${env.SELI_ARTIFACTORY_REPO_API_KEY}
+              --replace eric-product-info.yaml:VERSION=${var.version}
+              --replace eric-product-info.yaml:REPO_PATH=${var.image-repopath-drop}
+              --replace eric-product-info.yaml:MAIN_IMAGE_NAME=${common.docker-image-name}
+        - task: helm-upload
+          docker-image: adp-release-auto
+          docker-flags:
+              - ${env.DOCKER_NETWORK}
+              - "--env ENABLE_HELM_V3=true"
+          cmd: upload_file.sh
+              --filename=${common.helm-chart-localpath}
+              --repository=${common.helm-chart-drop-repopath}/${common.helm-chart-name}
+              --api-token=${env.SELI_ARTIFACTORY_REPO_API_KEY}
+
+
+

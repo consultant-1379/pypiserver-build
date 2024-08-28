@@ -1,0 +1,85 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+{{- if eq (include "eric-lcm-package-repository-py.serviceMesh.enabled" .) "true" }}
+{{- if (.Values.serviceMesh.ingress.enabled) }}
+{{- if (.Values.serviceMesh.settingsVS.enabled) }}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ include "eric-lcm-package-repository-py.name" . }}-virtualservice
+  labels: {{ include "eric-lcm-package-repository-py.labels" . | nindent 4 }}
+  annotations: {{ include "eric-lcm-package-repository-py.annotations" . | nindent 4 }}
+spec:
+  exportTo:
+  - "."
+  gateways:
+    - {{ .Values.serviceMesh.ingress.gwName | quote }}
+  hosts:
+    - {{ .Values.serviceMesh.ingress.host | quote }}
+  http:
+    - match:
+      - uri:
+          prefix: /pypi
+      rewrite:
+        uri: /
+      route:
+      - destination:
+          host: {{ include "eric-lcm-package-repository-py.name" . }}
+          port:
+            number: {{ .Values.service.port }}
+{{- if .Values.serviceMesh.settingsVS.retries }}
+      retries:
+{{ toYaml .Values.serviceMesh.settingsVS.retries | indent 8 }}
+      timeout: {{ required "You must specify an overall timeout to use retries" .Values.serviceMesh.settingsVS.overallTimeout}}
+{{- else if .Values.serviceMesh.settingsVS.overallTimeout }}
+      timeout: {{ .Values.serviceMesh.settingsVS.overallTimeout }}
+{{- end }}
+    - match:
+      - uri:
+          prefix: /simple
+      route:
+      - destination:
+          host: {{ include "eric-lcm-package-repository-py.name" . }}
+          port:
+            number: {{ .Values.service.port }}
+{{- if .Values.serviceMesh.settingsVS.retries }}
+      retries:
+{{ toYaml .Values.serviceMesh.settingsVS.retries | indent 8 }}
+      timeout: {{ required "You must specify an overall timeout to use retries" .Values.serviceMesh.settingsVS.overallTimeout}}
+{{- else if .Values.serviceMesh.settingsVS.overallTimeout }}
+      timeout: {{ .Values.serviceMesh.settingsVS.overallTimeout }}
+{{- end }}
+
+    - match:
+      - uri:
+          prefix: /packages
+      route:
+      - destination:
+          host: {{ include "eric-lcm-package-repository-py.name" . }}
+          port:
+            number: {{ .Values.service.port }}
+{{- if .Values.serviceMesh.settingsVS.retries }}
+      retries:
+{{ toYaml .Values.serviceMesh.settingsVS.retries | indent 8 }}
+      timeout: {{ required "You must specify an overall timeout to use retries" .Values.serviceMesh.settingsVS.overallTimeout}}
+{{- else if .Values.serviceMesh.settingsVS.overallTimeout }}
+      timeout: {{ .Values.serviceMesh.settingsVS.overallTimeout }}
+{{- end }}
+---
+{{- end }}
+{{- end }}
+{{- end }}

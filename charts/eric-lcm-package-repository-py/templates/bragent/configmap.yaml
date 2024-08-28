@@ -1,0 +1,85 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+{{- if eq .Values.brAgent.enabled true }}
+{{ $global := fromYaml ( include "eric-lcm-package-repository-py.global" . ) -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ template "eric-lcm-package-repository-py.name" . }}-bragent"
+  labels:
+    {{- include "eric-lcm-package-repository-py.labels" . | nindent 4 }}
+  annotations:
+    {{- include "eric-lcm-package-repository-py.annotations" . | nindent 4 }}
+data:
+  application.properties: |+
+    server.port = {{ .Values.brAgent.restPort }}
+    logging.config = /config/logback-spring.xml
+    spring.main.banner-mode = off
+    orchestrator.host = {{ $global.adpBR.broServiceName }}
+    orchestrator.port = {{ $global.adpBR.broGrpcServicePort }}
+    bragent.id = {{ .Values.brAgent.brLabelValue }}
+    bragent.apiVersion = 3
+    bragent.scope = {{- template "eric-lcm-package-repository-py.backupTypes" . }}
+    bragent.softwareVersion.description = Python Package Repository Agent for backup and restore.
+    bragent.softwareVersion.productionDate = {{ dateInZone "2006-01-02T15:04:05" now "UTC" }}
+    bragent.softwareVersion.productName = Python Package Repository
+    bragent.softwareVersion.productNumber = APR 201 939
+    bragent.softwareVersion.type = Management and Mornitoring
+    bragent.softwareVersion.revision = {{ .Chart.Version }}
+    bragent.softwareVersion.commercialVersion = 5.0.0
+    bragent.softwareVersion.semanticVersion = 5.0.0
+    bragent.backendType = BRO
+    bragent.agentFeatures = PLAINTEXT, TLS, MTLS, PREPARE_STAGE, POST_STAGE, MULTIPLE_BACKUP_TYPES, SELECTIVE_BACKUP
+    # the file that BRA will transfer to BRO
+    bragent.fragment.backup.data.path = {{ template "eric-lcm-package-repository-py.brAgent.braBackupDir" . }}/{{ template "eric-lcm-package-repository-py.brAgent.backupRestoreFileName" . }}
+    bragent.fragment.custom.backup.data.path =
+    bragent.download.location = {{ template "eric-lcm-package-repository-py.brAgent.braRestoreDir" . }}
+    bragent.agentBehavior =
+    {{- if $global.security.tls.enabled }}
+    flag.grpc.siptls.security.enabled = true
+    siptls.client.certificateChainFilePath = {{ template "eric-lcm-package-repository-py.brAgent.broCliCert" . }}
+    siptls.client.privateKeyFilePath = {{ template "eric-lcm-package-repository-py.brAgent.broCliPrivKey" . }}
+    siptls.ca.path = {{ template "eric-lcm-package-repository-py.brAgent.rootCA" . }}
+    siptls.ca.name = {{ toString $global.adpBR.broServiceName }}
+    {{- else }}
+    flag.grpc.siptls.security.enabled = false
+    {{- end }}
+    # the source data directory in registry container
+    originData.path =  {{ template "eric-lcm-package-repository-py.brAgent.filesystemRootDirectory" . }}
+    # backup exclude file
+    originData.excludefile =
+    # BRA will download backup data from BRO to this file path
+    restore.file = {{ template "eric-lcm-package-repository-py.brAgent.braRestoreDir" . }}/{{ template "eric-lcm-package-repository-py.brAgent.backupRestoreFileName" . }}
+
+
+  logback-spring.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <configuration debug="false">
+        <conversionRule conversionWord="lowerCaseLevel" converterClass="com.ericsson.mlops.bragent.configuration.LowerCaseLogLevelConverter" />
+        <conversionRule conversionWord="escapedMessage" converterClass="com.ericsson.mlops.bragent.configuration.EscapedMessageConverter" />
+
+        <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>{"version": "1.2.0", "timestamp": "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}", "severity": "%lowerCaseLevel", "service_id": "{{ include "eric-lcm-package-repository-py.fullname" . }}", "metadata": {"pod_name": "${HOSTNAME}", "container_name": "bragent", "namespace": "{{.Release.Namespace}}"}, "message": "%escapedMessage"}%n</pattern>
+            </encoder>
+        </appender>
+
+        <root level="{{ .Values.brAgent.logLevel }}">
+            <appender-ref ref="console"/>
+        </root>
+    </configuration>
+{{- end }}

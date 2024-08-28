@@ -1,0 +1,50 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+bases: 
+  - environments.yaml 
+
+---
+bases:
+  - ./common/repositories.yaml
+  - ./common/defaults.yaml
+
+--- 
+
+helmfiles:
+ - path: subhelmfiles/env-setup-helmfile.yaml 
+   values:
+   - {{ toYaml .Values | nindent 6 }}
+{{- if  eq (requiredEnv "TLS_ENABLED") "true" }}   
+ - path: subhelmfiles/sip-tls-helmfile.yaml
+   values:
+   - {{ toYaml .Values | nindent 6 }}
+{{- end }}
+{{- if eq (requiredEnv "SERVICEMESH_ENABLED") "true" }}
+ - path: subhelmfiles/mesh-controller-helmfile.yaml
+   values:
+   - {{ toYaml .Values | nindent 6 }}
+{{- end }}   
+{{- if eq (requiredEnv "LOGSHIPPER_ENABLED") "true" }}
+ - path: subhelmfiles/logshipper-dependencies-helmfile.yaml
+   values:
+   - {{ toYaml .Values | nindent 6 }}  
+{{- end }}   
+{{- if eq (requiredEnv "BRO_ENABLED") "true" }}
+ - path: subhelmfiles/bro-helmfile.yaml
+   values:
+   - {{ toYaml .Values | nindent 6 }}
+{{- end }}

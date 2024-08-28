@@ -1,0 +1,287 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+{{ $global := fromYaml ( include "eric-lcm-package-repository-py.global" . ) -}}
+{{- $streamLogs := eq (include "eric-lcm-package-repository-py.log-streaming-activated" .) "true"  -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "eric-lcm-package-repository-py.name" . }}
+  labels: {{ include "eric-lcm-package-repository-py.labels" . | nindent 4 }}
+  annotations: {{ include "eric-lcm-package-repository-py.annotations" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{ include "eric-lcm-package-repository-py.selectorLabels" . | nindent 8 }}
+  {{- include "eric-lcm-package-repository-py.update-strategy" . | nindent 2 }}
+  serviceName: {{ include "eric-lcm-package-repository-py.name" . }}
+  template:
+    metadata:
+      labels: 
+        {{- $controllerLabels := include "eric-lcm-package-repository-py.labels" . | fromYaml -}}
+        {{- $istioSidecarLabels := include "eric-lcm-package-repository-py.istio-sidecar-labels" . | fromYaml -}}
+        {{ include "eric-lcm-package-repository-py.mergeLabels" (dict "location" .Template.Name "sources" (list $controllerLabels $istioSidecarLabels )) | trim | nindent 8 }}
+        {{- if $streamLogs }}
+        {{ .Values.logShipper.output.logTransformer.host }}-access: "true"
+        {{- end }}
+      annotations: 
+        {{- $pypiserverAnnotations:= include "eric-lcm-package-repository-py.annotations" . | fromYaml -}}
+        {{- $istioSidecarAnnotations:= include "eric-lcm-package-repository-py.istio-sidecar-annotations" . | fromYaml -}}
+        {{- $egressRateAnnotation := include "eric-lcm-package-repository-py.pypiserver-egressRate.annotation" . | fromYaml  -}}
+        {{- $serviceMeshAnnotation := include "eric-lcm-package-repository-py.service-mesh-version" . | fromYaml  -}}
+        {{- include "eric-lcm-package-repository-py.mergeAnnotations" (dict "location" .Template.Name "sources" (list $pypiserverAnnotations $istioSidecarAnnotations $egressRateAnnotation $serviceMeshAnnotation )) | trim | nindent 8 }}
+        {{- if $streamLogs }}
+          {{- include "eric-log-shipper-sidecar.LsAppArmorProfileAnnotation" . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.brAgent.backupTypeList }}
+        {{- if (index .Values.brAgent.backupTypeList 0) }}
+        backupType: {{- template "eric-lcm-package-repository-py.backupTypes" . }}
+        {{- end }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "eric-lcm-package-repository-py.serviceAccountName" . | quote }}
+      {{- include "eric-lcm-package-repository-py.podPriorityClass" . | indent 6 }}
+      securityContext:
+        fsGroup: {{ include "eric-lcm-package-repository-py.fsGroup.coordinated" . }}
+        {{- include "eric-lcm-package-repository-py.seccomp-profile" (dict "Values" .Values "Scope" "Pod") | nindent 8 }}
+        supplementalGroups: {{ include "eric-lcm-package-repository-py.supplementalGroups" . }}
+      {{- if .Values.imageCredentials.pypiinit.enabled }}
+      initContainers:
+        - name: init-load-packages
+          image: {{ include "eric-lcm-package-repository-py.ericLcmPackageRepositoryPyInitContainer" . }}
+          {{- include "eric-lcm-package-repository-py.container-security-context" (dict "Values" .Values "ContainerName" "Pod") | nindent 10 }}
+          imagePullPolicy: {{ default "Always" .Values.imageCredentials.pypiinit.registry.pullPolicy }}
+          volumeMounts:
+            - mountPath: /mnt
+              name: packages
+          command: ["/bin/sh"]
+          args: ["-c", "cp -fpR /data/packages /mnt/ && ls -la /mnt/packages/ || echo FAILED"]
+          resources: {{ include "eric-lcm-package-repository-py.containerResources" (list $ . "init-load-packages" ) | nindent 12 }}
+      {{- end }}
+      containers:
+      {{- if $streamLogs -}}
+        {{- $logshipperImageDict := dict "logshipperSidecarImage" ((((.Values).global).logShipper).config).image -}}
+        {{- include "eric-log-shipper-sidecar.log-shipper-sidecar-container" (mergeOverwrite . $logshipperImageDict ) | nindent 8 }}
+      {{- end }}
+        - name: {{ include "eric-lcm-package-repository-py.name" . }}
+          image: {{ include "eric-lcm-package-repository-py.ericLcmPackageRepositoryPyImagePath" . }}
+          {{- include "eric-lcm-package-repository-py.container-security-context" (dict "Values" .Values "ContainerName" ( include "eric-lcm-package-repository-py.name" . )) | nindent 10 }}
+          {{- include "eric-lcm-package-repository-py.imagePullPolicy" (list $ . (dict "imageKey" "ericLcmPackageRepositoryPy" )) | nindent 10 }}
+          command: [ "catatonit" ]
+          args:
+          - --
+          - stdout-redirect
+          - -redirect
+          - {{ include "eric-lcm-package-repository-py.log-redirect" . }}
+          - -service-id
+          - {{ include "eric-lcm-package-repository-py.fullname" . | quote }}
+          {{- if $streamLogs }}
+          - -logfile
+          - {{ .Values.logShipper.storage.path }}/pypiserver.log
+          - -rotate
+          - {{ .Values.logShipper.stdoutRedirect.rotate | quote  }}
+          - -size
+          - {{ .Values.logShipper.stdoutRedirect.size | quote  }}
+          - -format
+          - json
+          {{- end }}
+          - --
+          - "pypi-server"
+          - "run"
+          - "--passwords={{ if .Values.auth.actions }}{{ template "eric-lcm-package-repository-py.runsecret.dir" . }}.htpasswd{{ else }}.{{ end }}"
+          - "--authenticate={{ .Values.auth.actions | default "." }}"
+          - "--port={{ .Values.service.port }}"
+          {{- range .Values.pypiserver.extraArgs }}
+          - {{ . }}
+          {{- end }}
+          - "/data/packages"
+          env:
+          - name: TZ
+            value: {{ $global.timezone | quote }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          volumeMounts:
+          {{- if $streamLogs }}
+            {{- include "eric-log-shipper-sidecar.log-shipper-sidecar-mounts" . | nindent 12 }}
+          {{- end}}
+            - mountPath: /log
+              name: pypi-server-logs
+            - mountPath:  /var/tmp
+              name: usr-tmp
+            # must override the path of Dockerfile's VOLUME here
+            - mountPath: /data/packages
+              name: packages
+              subPath: packages
+            - mountPath: {{ template "eric-lcm-package-repository-py.runsecret.dir" . }}
+              name: secrets
+              readOnly: true
+          {{- include "eric-lcm-package-repository-py.containerProbesConfig" (list $ . (dict "probesKey" "ericLcmPackageRepositoryPy" )) | nindent 10 }}    
+          resources: {{ include "eric-lcm-package-repository-py.containerResources" (list $ . "ericLcmPackageRepositoryPy" ) | nindent 12 }}
+        {{- if eq .Values.brAgent.enabled true }}  
+        - name: bragent
+          imagePullPolicy: {{ include "eric-lcm-package-repository-py.serviceImagePullPolicy" . }}
+          image: {{ include "eric-lcm-package-repository-py.ImagePath" (dict "Values" .Values "Files" .Files "ContainerName" "eric-aiml-bragent") }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: {{ include "eric-lcm-package-repository-py.fsGroup.coordinated" . }}
+            capabilities:
+              drop:
+                - ALL
+            {{- with (index .Values "seccompProfile" "brAgent") }}
+            seccompProfile:
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          command: ["/bin/sh", "-c"]
+          args: ["/usr/bin/catatonit --
+                java
+                {{ include "eric-lcm-package-repository-py.brAgent.jvmHeapSettings" . }}
+                -Dspring.config.location=/config/application.properties
+                -jar application.jar /config/application.properties"]
+          env:
+            - name: TZ
+              value: {{ template "eric-lcm-package-repository-py.timezone" . }}
+            - name: BRAGENT_ID
+              value: {{ .Values.brAgent.brLabelValue }}
+            - name: NAMESPACE
+              valueFrom: { fieldRef: { fieldPath: metadata.namespace } }
+            - name: CONTAINER_NAME
+              value: "bragent"
+            - name: LOG_LEVEL
+              value: {{ default "info" .Values.brAgent.logLevel | quote | lower }}
+          resources:
+            requests:
+          {{- if .Values.resources.brAgent.requests.cpu }}
+              cpu: {{ .Values.resources.brAgent.requests.cpu | quote }}
+          {{- end }}
+          {{- if .Values.resources.brAgent.requests.memory }}
+              memory: {{ .Values.resources.brAgent.requests.memory | quote }}
+          {{- end }}
+          {{- if index .Values "resources" "brAgent" "requests" "ephemeral-storage" }}
+              ephemeral-storage: {{ index .Values "resources" "brAgent" "requests" "ephemeral-storage" | quote }}
+          {{- end }}
+            limits:
+          {{- if .Values.resources.brAgent.limits.cpu }}
+              cpu: {{ .Values.resources.brAgent.limits.cpu | quote }}
+          {{- end }}
+          {{- if .Values.resources.brAgent.limits.memory }}
+              memory: {{ .Values.resources.brAgent.limits.memory | quote }}
+          {{- end }}
+          {{- if  index .Values "resources" "brAgent" "limits" "ephemeral-storage" }}
+              ephemeral-storage: {{ index .Values "resources" "brAgent" "limits" "ephemeral-storage" | quote }}
+          {{- end }}
+          ports:
+          - name: grpc-bro
+            containerPort: {{ template "eric-lcm-package-repository-py.adpBR.broGrpcServicePort" . }}
+            protocol: TCP
+          - name: http-rest
+            containerPort: {{ .Values.brAgent.restPort }}
+            protocol: TCP 
+          {{- include "eric-lcm-package-repository-py.brAgent.startupProbe" . | nindent 10 }}
+          {{- include "eric-lcm-package-repository-py.brAgent.livenessProbe" . | nindent 10 }}
+          {{- include "eric-lcm-package-repository-py.brAgent.readinessProbe" . | nindent 10 }}   
+          volumeMounts:
+          {{- if $streamLogs }}
+            {{- include "eric-log-shipper-sidecar.log-shipper-sidecar-mounts" . | nindent 12 }}
+          {{- end}}
+          - name: bragent-config
+            mountPath: /config
+          - name: tmp-data
+            mountPath: /tmp
+          - name: backup-data
+            mountPath: {{ template "eric-lcm-package-repository-py.brAgent.braBackupDir" . }}
+          - name: restore-data
+            mountPath: {{ template "eric-lcm-package-repository-py.brAgent.braRestoreDir" . }} 
+          - mountPath: /data/packages
+            name: packages
+            subPath: packages  
+          {{- if $global.security.tls.enabled }}
+          - name: {{ template "eric-lcm-package-repository-py.brAgent.rootCASecret" . }}
+            mountPath: {{ template "eric-lcm-package-repository-py.brAgent.rootCAMountPath" . }}
+          - name: {{ template "eric-lcm-package-repository-py.brAgent.broCliCertSecretName" . }}
+            mountPath: {{ template "eric-lcm-package-repository-py.brAgent.broCliCertMountPath" . }}
+          {{- end }} 
+        {{- end }}    
+      volumes:
+      {{- if $streamLogs }}
+        {{- include "eric-log-shipper-sidecar.log-shipper-sidecar-volumes" . | nindent 8 }}
+      {{- end }}
+        - name: pypi-server-logs
+          emptyDir:
+            sizeLimit: {{ .Values.ephemeralStorage.pypi_server_logs.size | quote }}
+        - name: usr-tmp
+          emptyDir:
+            sizeLimit: {{ .Values.ephemeralStorage.usr_tmp.size | quote }}
+        - name: secrets
+          secret:
+            secretName: {{ include "eric-lcm-package-repository-py.name" . }}
+        {{- if eq .Values.brAgent.enabled true }}
+        - name: bragent-config
+          configMap:
+            name: "{{ template "eric-lcm-package-repository-py.name" . }}-bragent"
+        - name: backup-data
+          emptyDir:
+            sizeLimit: {{ .Values.ephemeralStorage.backup_data.size | quote }}
+        - name: restore-data
+          emptyDir:
+            sizeLimit: {{ .Values.ephemeralStorage.restore_data.size | quote }}
+        - name: tmp-data
+          emptyDir:
+            medium: Memory  
+        {{- end }} 
+        {{- if $global.security.tls.enabled }}
+        - name: {{ template "eric-lcm-package-repository-py.brAgent.rootCASecret" . }}
+          secret:
+            secretName: {{ template "eric-lcm-package-repository-py.brAgent.rootCASecret" . }}
+            optional: true
+        - name: {{ template "eric-lcm-package-repository-py.brAgent.broCliCertSecretName" . }}
+          secret:
+            secretName: {{ template "eric-lcm-package-repository-py.brAgent.broCliCertSecretName" . }}
+            optional: true
+        {{- end }}   
+      {{- include "eric-lcm-package-repository-py.pullSecret" . | nindent 6 }}
+      nodeSelector: {{ include  "eric-lcm-package-repository-py.pypiserver.nodeSelector" . | nindent 8 }}
+      {{- include "eric-lcm-package-repository-py.affinityPodAntiAffinity" . | indent 6 }}
+      tolerations: {{ include "eric-lcm-package-repository-py.merge-tolerations" (dict "root" . "podbasename" "pypiserver") | nindent 8}}
+      {{- if .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- include "eric-lcm-package-repository-py.topologySpreadConstraints" . | nindent 8 }}
+      {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: packages
+        {{- if .Values.persistence.persistentVolumeClaim.annotations }}
+        annotations:
+          {{ toYaml .Values.persistence.persistentVolumeClaim.annotations | indent 10 }}
+      {{- end }}
+      spec:
+        accessModes: {{ .Values.persistence.persistentVolumeClaim.accessModes }}
+        {{- if .Values.persistence.persistentVolumeClaim.storageClassName -}}
+        {{- if eq .Values.persistence.persistentVolumeClaim.storageClassName "-" }}
+        storageClassName: ""
+        {{- else }}
+        storageClassName: {{ .Values.persistence.persistentVolumeClaim.storageClassName | quote }}
+        {{- end -}}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.persistentVolumeClaim.size | quote }}
+            

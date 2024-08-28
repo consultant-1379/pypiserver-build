@@ -1,0 +1,135 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: lcm-pypiserver-prometheus-config-map
+  labels:
+    app.kubernetes.io/component: "prometheus-ingress"
+    app: eric-pm-server
+    app.kubernetes.io/instance: eric-pm-server
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: eric-pm-server
+    app.kubernetes.io/version: 10.11.0_20   
+  annotations:
+    ericsson.com/product-name: PM Server HELM
+    ericsson.com/product-number: CXC 201 1513
+    ericsson.com/product-revision: 10.11.0
+    meta.helm.sh/release-name: eric-pm-server
+    meta.helm.sh/release-namespace: {{ .Release.Namespace }}
+data:
+  "prometheus.yml": |
+    global:
+      scrape_interval: 10s
+      scrape_timeout: 10s
+      evaluation_interval: 10s
+  
+    scrape_configs:
+    # scrape config for services.
+      - job_name: argo-workflow-controller-metrics
+        honor_timestamps: true
+        metrics_path: /metrics
+        scheme: https
+        enable_http2: false
+        tls_config:
+          ca_file: /etc/istio-certs/root-cert.pem
+          cert_file: /etc/istio-certs/cert-chain.pem
+          key_file: /etc/istio-certs/key.pem
+          insecure_skip_verify: true
+        kubernetes_sd_configs:
+          - role: service
+            namespaces:
+              names:
+                - {{ .Release.Namespace }}
+        relabel_configs:
+          - source_labels:
+              - __meta_kubernetes_service_label_app_kubernetes_io_component
+            action: keep
+            regex: argo-workflows-controller
+          - source_labels:
+              - __meta_kubernetes_service_annotation_prometheus_io_service_scrape
+            action: keep
+            regex: true
+          - source_labels:
+              - __meta_kubernetes_service_annotation_prometheus_io_service_path
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels:
+              - __meta_kubernetes_service_port_name
+            action: keep
+            regex: metrics
+          - source_labels:
+              - __address__
+              - __meta_kubernetes_service_annotation_prometheus_io_service_port
+            action: replace
+            regex: ((?:\[.+\])|(?:.+))(?::\d+);(\d+)
+            replacement: $1:$2
+            target_label: __address__
+          - source_labels:
+              - __meta_kubernetes_namespace
+            target_label: namespace
+          - source_labels:
+              - __meta_kubernetes_service_name
+            target_label: service_name
+      - job_name: argo-workflow-controller-telemetry
+        honor_timestamps: true
+        metrics_path: /metrics
+        scheme: https
+        enable_http2: false
+        tls_config:
+          ca_file: /etc/istio-certs/root-cert.pem
+          cert_file: /etc/istio-certs/cert-chain.pem
+          key_file: /etc/istio-certs/key.pem
+          insecure_skip_verify: true
+        kubernetes_sd_configs:
+          - role: service
+            namespaces:
+              names:
+                - {{ .Release.Namespace }}
+        relabel_configs:
+          - source_labels:
+              - __meta_kubernetes_service_label_app_kubernetes_io_component
+            action: keep
+            regex: argo-workflows-controller
+          - source_labels:
+              - __meta_kubernetes_service_annotation_prometheus_io_service_scrape
+            action: keep
+            regex: true
+          - source_labels:
+              - __meta_kubernetes_service_annotation_prometheus_io_service_path2
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels:
+              - __meta_kubernetes_service_port_name
+            action: keep
+            regex: telemetry
+          - source_labels:
+              - __address__
+              - __meta_kubernetes_service_annotation_prometheus_io_service_port2
+            action: replace
+            regex: ((?:\[.+\])|(?:.+))(?::\d+);(\d+)
+            replacement: $1:$2
+            target_label: __address__
+          - source_labels:
+              - __meta_kubernetes_namespace
+            target_label: namespace
+          - source_labels:
+              - __meta_kubernetes_service_name
+            target_label: service_name

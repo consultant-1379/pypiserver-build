@@ -1,0 +1,32 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+apiVersion: v2
+name: eric-lcm-package-repository-int
+description: A Helm chart for Python package Repository with log shipper
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+dependencies:
+  - name: eric-log-shipper
+    version: LOGSHIPPER_CHART_VERSION
+    repository: "https://arm.rnd.ki.sw.ericsson.se/artifactory/proj-adp-gs-released-helm/"
+    import-values:
+    - child: logShipper.config
+      parent: global.logShipper.config
+  - name: eric-lcm-package-repository-py
+    version: PYTHON_PKG_REPO_CHART_VERSION
+    repository: PYTHON_PKG_REPO_CHART_REPO

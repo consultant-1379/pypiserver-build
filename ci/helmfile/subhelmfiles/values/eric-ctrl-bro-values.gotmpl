@@ -1,0 +1,12 @@
+global:
+  networkPolicy:
+    enabled: {{ env "NETWORK_POLICY_ENABLED" | default false }}
+  security:
+    tls:
+      enabled: {{ env "TLS_ENABLED" | default false }}
+imageCredentials:
+  pullSecret: {{ requiredEnv "IMAGE_PULL_SECRET" }}
+metrics:
+  enabled: false
+labels:
+   env: ci

@@ -1,0 +1,29 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+{{- if .Values.global.serviceMesh.enabled }}
+apiVersion: "security.istio.io/v1beta1"
+kind: "PeerAuthentication"
+metadata:
+  name: default-peer-authentication-policy
+spec:
+  mtls:
+{{- if .Values.global.security.tls.enabled }}
+    mode: STRICT
+{{- else }}
+    mode: DISABLE
+{{- end }}
+{{- end }} 

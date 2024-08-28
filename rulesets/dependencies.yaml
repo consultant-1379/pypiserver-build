@@ -1,0 +1,112 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+modelVersion: 2.0
+
+description: "Dependency installation on rules"
+
+docker-images:
+    - adp-helm-kubectl: armdocker.rnd.ericsson.se/proj-adp-cicd-drop/bob-py3kubehelmbuilder:${env.HELM_KUBECTL_TAG}
+    - ci-toolkit: armdocker.rnd.ericsson.se/proj-mxe-ci-internal/ci-toolkit:${env.CI_TOOLKIT_TAG}
+
+import:
+    common: common-properties.yaml
+
+# import environment variables (For example: Jenkins parameters)
+env:
+    - HELM_KUBECTL_TAG (default=latest)
+    - KUBECTL_VERSION (default=1.25.3)
+    - K8S_CLUSTER_ID (default=notset)
+    - CI_TOOLKIT_TAG (default=latest)
+    - DOCKER_NETWORK (default=--network host)
+    - DOCKER_CONFIG (default=${env.HOME}/.docker/)
+    - HOME
+    - PWD
+    - K8S_NAMESPACE (default=lcm-pypiserver-ci)
+    - KUBECONFIG (default=${env.HOME}/.kube/config)
+    - SELI_ARTIFACTORY_REPO_USER (default=mxecifunc)
+    - SERO_ARTIFACTORY_REPO_API_KEY
+    - SELI_ARTIFACTORY_REPO_API_KEY
+    - INGRESS_HOST_TLS_SECRET_MANIFEST (default=${env.PWD}/build/lcm-package-repository-py-tls.yaml)
+     #MTLS
+    - TLS_ENABLED (default=true)
+    - SERVICEMESH_ENABLED (default=true)
+    - LOGSHIPPER_ENABLED (default=false)
+    - BRO_ENABLED (default=false)
+    - IMAGE_PULL_SECRET (default=armdocker-creds)
+
+var:
+    - commithash
+    - helmfile_env 
+
+# Rules to execute
+rules:
+    init: 
+      - task: init 
+        cmd: bash -c '''
+            set -ex; 
+            mkdir -p ${kubectl-cache-dir};
+            echo "notSet" > ${env.PWD}/.bob/var.sm-version;
+            helmfileEnv="default";
+            if  [[ "${env.K8S_CLUSTER_ID}" =~ .*"vcluster".* ]] && [[ "${env.K8S_CLUSTER_ID}" =~ .*"kroto012".* ]]; then
+            helmfileEnv="${env.K8S_CLUSTER_ID}"; fi;
+            echo "$helmfileEnv" > .bob/var.helmfile_env;'''
+
+    # Docker config and TLS host secret manifest are obtained via Jenkins credentials at runtime and copied into
+    # env-setup chart
+    install:
+        - rule: init
+        - task: setup-env-prereq 
+          docker-image: ci-toolkit
+          docker-flags: &docker_flags_kube_config
+              - ${env.DOCKER_NETWORK}
+              - "--env HOME=${env.HOME}"
+              - "--env NAMESPACE=${env.K8S_NAMESPACE}"
+              - "--env KUBECONFIG=${env.KUBECONFIG}"
+              - "--env K8S_CLUSTER_ID=${env.K8S_CLUSTER_ID}"
+              - "--env EGADROOTCA_LOCATION=/usr/local/share/ca-certificates/EGADRootCA.crt"
+              - "--env TLS_ENABLED=${env.TLS_ENABLED}"
+              - "--env SERVICEMESH_ENABLED=${env.SERVICEMESH_ENABLED}"
+              - "--env LOGSHIPPER_ENABLED=${env.LOGSHIPPER_ENABLED}"
+              - "--env BRO_ENABLED=${env.BRO_ENABLED}"
+              - "--env IMAGE_PULL_SECRET=${env.IMAGE_PULL_SECRET}"
+              - "--env SELI_ARTIFACTORY_REPO_USER=${env.SELI_ARTIFACTORY_REPO_USER}"
+              - "--env SELI_ARTIFACTORY_REPO_API_KEY=${env.SELI_ARTIFACTORY_REPO_API_KEY}"
+              - "--volume ${env.PWD}:${env.PWD}"
+              - "--volume ${env.HOME}:${env.HOME}"
+              - "--volume ${env.KUBECONFIG}:${env.KUBECONFIG}"
+              - "--volume ${env.DOCKER_CONFIG}:${env.DOCKER_CONFIG}"
+              - "--volume ${env.INGRESS_HOST_TLS_SECRET_MANIFEST}:${env.INGRESS_HOST_TLS_SECRET_MANIFEST}:ro"
+          cmd: bash -c '''
+              set -ex;
+              mkdir -p ci/helmfile/charts/env-setup/files/;
+              cp ${env.INGRESS_HOST_TLS_SECRET_MANIFEST} ci/helmfile/charts/env-setup/templates/;
+              cp ${env.DOCKER_CONFIG}/config.json ci/helmfile/charts/env-setup/files/config.json;
+              cd ${env.PWD}/ci/helmfile;
+              kubectl delete namespace ${env.K8S_NAMESPACE} --now=true --ignore-not-found=true;
+              helmfile --debug --environment ${var.helmfile_env} sync --include-transitive-needs --set global.security.tls.enabled=${env.TLS_ENABLED} --set global.serviceMesh.enabled=${env.SERVICEMESH_ENABLED} --set serviceMesh.enabled=${env.SERVICEMESH_ENABLED}'''
+
+    delete:
+        - rule: init
+        - task: delete-prereq-env
+          docker-image: ci-toolkit
+          docker-flags: *docker_flags_kube_config
+          cmd: bash -c '''
+              set -ex;
+              cd ${env.PWD}/ci/helmfile;
+              helmfile --debug --environment ${var.helmfile_env} destroy;
+              kubectl delete namespace ${env.K8S_NAMESPACE} --now=true;
+              '''

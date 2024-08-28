@@ -1,0 +1,18 @@
+{
+    "metadata": {
+      "serviceHelmChartName": "eric-lcm-package-repository-py",
+      "validFromServiceVersion": "1.0.0",
+      "usedSchemaVersion": "1.0.0",
+      "fileVersion": "1.0.0",
+      "dateEdited": "2023-12-08",
+      "usedConstraintsVersion": "1.0.0"
+    },
+    "images": [
+      {
+        "name": "*/eric-lcm-package-repository-py:*"
+      },
+      {
+        "name": "*/eric-aiml-bragent:*"
+      }
+    ]
+  }

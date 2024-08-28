@@ -1,0 +1,42 @@
+#
+# COPYRIGHT Ericsson 2023
+#
+#
+#
+# The copyright to the computer program(s) herein is the property of
+#
+# Ericsson Inc. The programs may be used and/or copied only with written
+#
+# permission from Ericsson Inc. or in accordance with the terms and
+#
+# conditions stipulated in the agreement/contract under which the
+#
+# program(s) have been supplied.
+#
+
+{{ if .Values.autoScaling.enabled }}
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "eric-lcm-package-repository-py.name" . }}
+  labels: {{ include "eric-lcm-package-repository-py.labels" . | nindent 4 }}
+  annotations: {{ include "eric-lcm-package-repository-py.annotations" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "eric-lcm-package-repository-py.name" . }}
+{{- if not .Values.autoScaling.minReplicas }}
+  {{- fail "autoScaling.minReplicas is mandatory when autoScaling feature is enabled" -}}
+{{- end }}
+  minReplicas: {{ .Values.autoScaling.minReplicas }}
+{{- if .Values.autoScaling.maxReplicas }}
+  {{- if lt .Values.autoScaling.maxReplicas .Values.autoScaling.minReplicas }}
+    {{- fail "autoScaling.maxReplicas must be equal or greater than autoScaling.minReplicas" -}}
+  {{- end }}
+  maxReplicas: {{ .Values.autoScaling.maxReplicas }}
+{{- end }}
+{{- if .Values.autoScaling.cpuThreshold }}
+  targetCPUUtilizationPercentage: {{ .Values.autoScaling.cpuThreshold }}
+{{- end }}
+{{- end }}
